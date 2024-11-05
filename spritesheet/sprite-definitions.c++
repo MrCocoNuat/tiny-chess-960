@@ -1,5 +1,5 @@
 // to save sprites, some sprites are doubled up as items and representative tokens on the map
-
+// also don't worry about the illegal identifiers yet
 enum SPRITE{
     WALL_1 = 0,
     WALL_2 = 1,
