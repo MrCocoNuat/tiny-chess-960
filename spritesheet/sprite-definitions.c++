@@ -5,7 +5,7 @@ enum SPRITE{
     WALL_2 = 1,
     DOOR = 2,
     CHEST = 3,
-    TERRAI_? = 4,
+    TERRAIN_? = 4,
     GRASS_1 = 5,
     GRASS_2 = 6,
     MELEE_WEAPON = 7, // represents MELEE_WEAPON on map
