@@ -41,11 +41,6 @@ The adventurer starts with a basic set composed of a Worn Shortsword and Comfy S
 EFF: ACC -30/(STR difference) NO SURPRISE ATTACK
 EFF: SPD -0.1/(STR difference)
 ```
-Inversely, possessing strength beyond that which is necessary to effectively use equipment will grant some bonuses.
-```
-EFF: ATK +0-1/(STR surplus)
-EFF: EVA +2/(STR surplus)
-```
 
 ### Sticks and Stones
 Damage comes in two forms in this dungeon. Physical damage is resisted by Defense on a point-for-point basis.
@@ -277,7 +272,7 @@ STR: 16
 ##### Assassin's Blade
 Thin and wavy, this obsidian shard is difficult to use but deadly if it finds its mark.
 ```
-ATK: 9-24 +1-4/UPGRADE ACC: 130
+ATK: 7-24 +1-4/UPGRADE ACC: 130
 SURPRISE: ATK+4-0 +2-0/UPGRADE
 STR: 17
 ```
@@ -285,7 +280,7 @@ STR: 17
 ##### Greataxe
 When wielded with sufficient strength, this ridiculously titanic weapon produces crushing yet graceful swings belying its hundred-kilogram heft.
 ```
-ATK: 13-26 +1-5/UPGRADE ACC: 95
+ATK: 12-26 +1-5/UPGRADE ACC: 95
 STR: 18
 ```
 
