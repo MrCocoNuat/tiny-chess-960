@@ -311,14 +311,14 @@ CHRG: 0.04/TURN +0.02/TURN/UPGRADE
 ```
 
 ##### Throwing Knife
-Well-balanced and quick to toss, these knives are a classic choice of adventurers everywhere. Up to 4 can be carried in a single stack.
+Well-balanced and quick to toss, these knives are a classic choice of adventurers everywhere. Durable enough to sink into a monster 10 times, up to 4 can be carried in a single stack.
 ```
 ATK: 4-12 ACC: 105 RNG: 99
 STR: 11
 ```
 
 ##### Tomahawk
-Small light axes weighted to always strike soft bits edge first are the sneaky adventurer's favorite projectile. Up to 4 can be carried in a single stack.
+Small light axes weighted to always strike soft bits edge first are the sneaky adventurer's favorite projectile. They are a little fragile, lasting only 5 hits, but up to 4 can be carried in a single stack.
 ```
 ATK: 4-16 ACC: 95 RNG:99
 SURPRISE: ATK +6-0
@@ -326,7 +326,7 @@ STR: 13
 ```
 
 ##### Throwing Hammer
-A hefty block of steel solidly attached to a handle can deal real hurt at a distance. Up to 4 can be carried in a single stack.
+A hefty block of steel solidly attached to a handle can deal real hurt at a distance. Their hardy construction lets them withstand 15 solid hits, and up to 4 can be carried in a single stack.
 ```
 ATK: 8-18 ACC: 100 RNG: 99
 STR: 15
@@ -357,7 +357,7 @@ STR: 14
 ```
 
 ##### Plate Mail
-A full encasing inside thick steel provides the ultimate in protection from the outside world.
+A full encasement of thick steel provides the ultimate in protection from the outside world.
 ```
 DEF: 4-10 +3-4/UPGRADE
 STR: 16
@@ -366,7 +366,7 @@ STR: 16
 ### Scrolls
 
 #### Scroll of Upgrade
-Some divine fortune must have left these scattered across the Dungeon, as if to give any adventurer brave enough to enter a fair shot at claiming its prize. Each scroll can infuse a piece of equipment with just the thing it needs to power it up and even decrease its strength requirement. *Exactly one is guaranteed to appear on each ordinary floor.*
+Some divine fortune must have left these scattered across the Dungeon, as if to give any adventurer brave enough to enter a fair shot at claiming its prize. Each scroll can infuse a melee weapon, wand, or armor with just the spark it needs to power it up and even decrease its strength requirement. *Exactly one is guaranteed to appear on each ordinary floor.*
 ```
 STR/UPGRADE: +1 -> -1, +3 -> -2, +5 -> -3, +8 -> -4
 ````
@@ -375,19 +375,22 @@ STR/UPGRADE: +1 -> -1, +3 -> -2, +5 -> -3, +8 -> -4
 A barely contained vengeful energy is sealed in this scroll. Unleashing it damages every monster for the adventurer's missing health, but also leaves the adventurer unable to act at all for some time.
 ```
 EFF: MONSTER HARM (MAXHP - HP) RNG: 9
+
 EFF: STUN
 DURATION: 4
 ```
 
 #### Scroll of Rage
-The roaring incantation on this scroll warps the mind of monsters that hear it. Anyone in earshot will be driven amok and begin attacking targets without regard for allegiance, and anything else will instead be drawn to this location by the havoc.
+The roaring incantation on this scroll warps the mind of monsters that hear it. Any monster in earshot will be driven amok and begin attacking targets without regard for allegiance, and anything else will instead be drawn to this location by the havoc.
 ```
+EFF: AMOK RNG: 5
 DURATION: 20
 ```
 
 #### Scroll of Terror
 The shriek recorded on this scroll instills incredible fear into monsters that hear it, causing them to try to flee from its source as fast as possible. Pain from taking damage will shorten the duration of this fear, though.
 ```
+EFF: FEAR RNG: 5
 DURATION: 20
 ```
 
@@ -408,14 +411,14 @@ EFF: STR+1
 ```
 
 #### Potion of Arcane Armor
-This reagent has a long-lasting hardening effect on skin, providing some defense, which due to the magical properties of the liquid is effective against magical damage as well. Alternatively, thrown at a monster, it can strip away any defense it has altogether for a much shorter duration.
+This reagent has a long-lasting hardening effect on skin, providing some defense, which due to the supernatural properties of the liquid is effective against magical damage as well. Alternatively, thrown at a monster, it can strip away any defense it has altogether for a much shorter duration.
 ```
 EFF: DEF +0-1/LEVEL
 EFF: MAGDEF +0-1/LEVEL
 DURATION: 100
 
 EFF: DEF *0
-DURATION: 4
+DURATION: 8
 ```
 
 #### Potion of Healing
