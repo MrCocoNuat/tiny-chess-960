@@ -41,6 +41,11 @@ The adventurer starts with a basic set composed of a Worn Shortsword and Comfy S
 EFF: ACC -30/(STR difference) NO SURPRISE ATTACK
 EFF: SPD -0.1/(STR difference)
 ```
+Inversely, possessing strength beyond that which is necessary to effectively use equipment will grant some bonuses.
+```
+EFF: ATK +0-1/(STR surplus)
+EFF: EVA +2/(STR surplus)
+```
 
 ### Sticks and Stones
 Damage comes in two forms in this dungeon. Physical damage is resisted by Defense on a point-for-point basis.
@@ -261,6 +266,7 @@ An old reliable slab of steel is the armament of choice for many an adventurer.
 ATK: 6-14 +1-3/UPGRADE ACC: 105
 STR: 14
 ```
+
 ##### Longsword
 Storied tradition underlies this exquisite blade surely crafted and maintained with the utmost of care, and its performance shows.
 ```
@@ -268,34 +274,66 @@ ATK: 11-20 +1-4/UPGRADE ACC: 100
 STR: 16
 ```
 
+##### Assassin's Blade
+Thin and wavy, this obsidian shard is difficult to use but deadly if it finds its mark.
+```
+ATK: 9-24 +1-4/UPGRADE ACC: 130
+SURPRISE: ATK+4-0 +2-0/UPGRADE
+STR: 17
+```
+
 ##### Greataxe
 When wielded with sufficient strength, this ridiculously titanic weapon produces crushing yet graceful swings belying its hundred-kilogram heft.
 ```
-ATK: 15-26 +1-5/UPGRADE ACC: 95
+ATK: 13-26 +1-5/UPGRADE ACC: 95
 STR: 18
 ```
 
 #### Ranged
 
-##### Fine Wand
-Sorcery is still a young science, but a simple magical bolt can be understood and casted by pretty much anyone nowadays with the appropriate equipment.
+##### Wand of Magic Missile
+Sorcery is still a young science, but a simple magical bolt can be understood and casted by pretty much anyone nowadays with the appropriate equipment, and this finely carved magewood shaft will do nicely.
 ```
 ATK: 8-12MAG +2-4/UPGRADE RNG: 99
 CHARGES: 3 +1/UPGRADE
-CHRG: 0.05/TURN +0.03/TURN/UPGRADE
+CHRG: 0.04/TURN +0.02/TURN/UPGRADE
+```
+
+##### Wand of Regrowth
+New life appears bursting out of this young green magewood branch. Its blasts will bring forth a single tile of tall grass.
+```
+CHARGES: 1 +1/UPGRADE
+CHRG: 0.04/TURN +0.02/TURN/UPGRADE
+```
+
+##### Hexing Rod
+Profane runes are carved into this winged magewood rod. The magic emanating from it feels as if it makes one's grip weaker, who knows what effect it will have if applied directly on monsters?
+```
+EFF: ATK*0.75
+DURATION: 5
+CHARGES: 2 +1/UPGRADE
+CHRG: 0.04/TURN +0.02/TURN/UPGRADE
 ```
 
 ##### Throwing Knife
 Well-balanced and quick to toss, these knives are a classic choice of adventurers everywhere. Up to 4 can be carried in a single stack.
 ```
-ATK: 4-12 RNG: 99
+ATK: 4-12 ACC: 105 RNG: 99
 STR: 11
 ```
 
-##### Bident
-A glorified large fork, but still proof of the old wisdom that two tines are better than one. Up to 4 can be carried in a single stack.
+##### Tomahawk
+Small light axes weighted to always strike soft bits edge first are the sneaky adventurer's favorite projectile. Up to 4 can be carried in a single stack.
 ```
-ATK: 8-18 RNG: 99
+ATK: 4-16 ACC: 95 RNG:99
+SURPRISE: ATK +6-0
+STR: 13
+```
+
+##### Throwing Hammer
+A hefty block of steel solidly attached to a handle can deal real hurt at a distance. Up to 4 can be carried in a single stack.
+```
+ATK: 8-18 ACC: 100 RNG: 99
 STR: 15
 ```
 
@@ -338,8 +376,16 @@ Some divine fortune must have left these scattered across the Dungeon, as if to 
 STR/UPGRADE: +1 -> -1, +3 -> -2, +5 -> -3, +8 -> -4
 ````
 
+#### Scroll of Retribution
+A barely contained vengeful energy is sealed in this scroll. Unleashing it damages every monster for the adventurer's missing health, but also leaves the adventurer unable to act at all for some time.
+```
+EFF: MONSTER HARM (MAXHP - HP) RNG: 9
+EFF: STUN
+DURATION: 4
+```
+
 #### Scroll of Rage
-The roaring incantation on this scroll warps the mind of monsters that hear it. Anyone in earshot will be driven amok and begin attacking targets without regard for allegiance, and anyone else will instead be drawn to this location by the havoc.
+The roaring incantation on this scroll warps the mind of monsters that hear it. Anyone in earshot will be driven amok and begin attacking targets without regard for allegiance, and anything else will instead be drawn to this location by the havoc.
 ```
 DURATION: 20
 ```
@@ -351,10 +397,11 @@ DURATION: 20
 ```
 
 #### Scroll of Recharging
-The raw energy bound in this scroll, when unleashed, rapidly restores the charge of the user's wands. If there are no wands at less than full charge, the energy instead accumulates around the user, shielding them from magical damage.
+The raw energy bound in this scroll, when unleashed, rapidly restores the charge of the user's wands. If there are no wands at less than full charge, the energy instead accumulates around the user, shielding them from damage.
 ```
-EFF1: CHARGE EVERY WAND 0.25/TURN DURATION: 20
-EFF2: SHIELD HPMAX*0.3
+EFF: CHARGE EVERY WAND 0.25/TURN DURATION: 20
+
+EFF: SHIELD HPMAX*0.3
 ```
 
 ### Potions
@@ -365,10 +412,22 @@ Some divine fortune must have left these scattered across the Dungeon, as if to 
 EFF: STR+1
 ```
 
+#### Potion of Arcane Armor
+This reagent has a long-lasting hardening effect on skin, providing some defense, which due to the magical properties of the liquid is effective against magical damage as well. Alternatively, thrown at a monster, it can strip away any defense it has altogether for a much shorter duration.
+```
+EFF: DEF +0-1/LEVEL
+EFF: MAGDEF +0-1/LEVEL
+DURATION: 100
+
+EFF: DEF *0
+DURATION: 4
+```
+
 #### Potion of Healing
-A magical remedy that closes wounds and leaves you feeling as if you just woke up, this can instantly restore a large quantity of health points. Alternatively, thrown at an undead enemy, it can corrode their unnatural bodies for significant damage as well.
+A magical remedy that closes wounds and leaves you feeling as refreshed as if you just woke up, this can instantly restore a large quantity of health points. Alternatively, thrown at a monster, it can corrode their unnatural bodies for significant damage as well.
 ```
 EFF: HEAL HPMAX*0.7
+
 EFF: HARM 4*FLOOR
 ```
 
@@ -381,8 +440,9 @@ DURATION: 20
 #### Potion of Haste
 An sweet and sticky brew that causes its drinker to be able to run at tremendous speed for a quick duration. Throwing it at a monster will instead bind their body parts together, inhibiting their movement.
 ```
-EFF1: SPD*3 DURATION: 20
-EFF2: SPD*0.5 DURATION: 20
+EFF: SPD*3 DURATION: 20
+
+EFF: SPD*0.5 DURATION: 20
 ```
 
 ### Food
@@ -393,8 +453,8 @@ EFF: SATIETY+80
 ```
 
 #### Suspicious Drumstick
-This came off of a monster expertly butchered by expert bladework. *Can only drop when*
+This came off of a monster expertly butchered by bladework and is *probably* safe to eat.
 ```
-EFF: SATIETY+10
-EFF: HEAL 1*FLOOR
+EFF: SATIETY+20
+EFF: RANDOM: [HEAL 1*FLOOR, HURT 1*FLOOR]
 ```
