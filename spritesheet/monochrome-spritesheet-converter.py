@@ -66,8 +66,8 @@ for frame_index in range(NUM_FRAMES):
 
 # Write the monochrome sprites to a new C++ file
 with open('monochrome-spritesheet.c++', 'w') as file:
-    file.write("#include <cstdint>\n\n")
-    file.write("static const uint8_t monochrome_sprites[{}][{}] = {{\n".format(NUM_FRAMES * SPRITES_PER_FRAME, SPRITE_WIDTH))
+    file.write("#include <stdint.h> \n\n")
+    file.write("const uint8_t monochrome_sprites[{}][{}] = {{\n".format(NUM_FRAMES * SPRITES_PER_FRAME, SPRITE_WIDTH))
 
     for sprite in sprites:
         file.write("    {")
@@ -76,4 +76,8 @@ with open('monochrome-spritesheet.c++', 'w') as file:
 
     file.write("};\n")
 
-print("Monochrome sprites written to monochrome-spritesheet.c++")
+# And the header
+with open('monochrome-spritesheet.hh', 'w') as file:
+    file.write("extern const uint8_t monochrome_sprites[{}][{}];\n".format(NUM_FRAMES * SPRITES_PER_FRAME, SPRITE_WIDTH))
+
+print("Monochrome sprites written to monochrome-spritesheet.cpp")
