@@ -83,4 +83,33 @@ void debugDisplay(){
   }
 }
 
-void debugTone(){};
+void debugTone(){
+    int8_t tone = 24;
+
+    MoveTo(30,48);
+    PlotText(PSTR("SPEAKER TEST"));
+    MoveTo(9,40);
+    PlotText(PSTR("RIGHT STICK L MUTE"));
+    MoveTo(18,32);
+    PlotText(PSTR("U/D CHANGE TONE"));
+
+    for (;;){
+      uint8_t joystickState = getJoystickState();
+      if (joystickState == 0){
+        continue; // no delay
+      }
+      if (joystickState & (1 << STICK_RL)){ // mute
+        playTone(-1);
+      }
+      if (joystickState & (1 << STICK_RU)){ // unmute tone up
+        playTone(++tone);
+      }
+      if (joystickState & (1 << STICK_RR)){ // unmute without changing tone
+        playTone(tone);
+      }
+      if (joystickState & (1 << STICK_RD)){ // unmute tone down
+        playTone(--tone);
+      }
+      delay(200);
+    }
+};

@@ -21,10 +21,8 @@ void setupBoard() {
 
   // output on OC1B
   TCCR1A = (1 << COM1B0);
-  // CTC (clear on OCR1A), /8 prescaler
-  TCCR1B = (1 << WGM12) | (1 << CS10);
-  OCR1A = 4000;  // for CTC
-  OCR1B = 4000;  // about 2kHz out
+  // CTC (clear on OCR1A)
+  TCCR1B = (1 << WGM12);
 
   sei();
 }
@@ -39,9 +37,31 @@ uint8_t getJoystickState() {
   return ~(pinA | ((pinB & (1 << PORTB0)) << 6) | ((pinB & (1 << PORTB1)) << 4) | ((pinB & (1 << PORTB2)) << 2));
 }
 
-void playTone(){
-  // use the prescaler of timer 1:
-  // /1, /8, /64, /256, /1024 spans 10 octaves, but for convenience we don't use /1024 (because that is way too little granularity) to keep 8* ratios
-  // the actually useful audible range for most buzzers is 100Hz to 8000Hz, so 6 octaves is plenty already. Offer all 8
-  // let A2=110Hz be octave 2, tone 0. A8=7040Hz be octave 8, tone 0 and the maximum
+
+// use the prescaler of timer 1: realistically we only need /8 -> 1MHz timer ticks, 64Hz timer overflows
+// Offer 4 octaves, because the decreasing precision at OCR1A ~= 0xFFFF / 0b00001000 is still OK. But caller can ask for higher too
+// let C1=65Hz be octave 1, tone 0, and just use shifts to go up octaves
+// These values are in geometric progression.
+const uint16_t timerTable[] = {
+  15288, // C
+  14430, // C#
+  13620, // D
+  12856, // Db
+  12134, // E
+  11453, // F
+  10810, // F#
+  10204, // G
+  9631, // Ab
+  9090, // A
+  8580, // Bb
+  8098 // B
+};
+// "reasonable" output for the speaker ranges from:
+// tone 21 = A2 to tone 81 = A7, outside of that the speaker sounds pretty bad...
+void playTone(int8_t tone){
+  // tone < 0 means stop output, so check that sign bit
+  // in TCCR1B[CS12:CS10], 010 is prescaler /8 and 000 is stop timer
+  TCCR1B = (TCCR1B & 0b11111000) | (!(tone & (1 << 7)) << CS11);
+  // just set this anyway, no point adding a branch
+  OCR1A = OCR1B = timerTable[tone % 12] >> (tone / 12);
 }

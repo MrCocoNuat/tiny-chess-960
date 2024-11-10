@@ -14,6 +14,6 @@ typedef enum {
 } Joystick;
 uint8_t getJoystickState();
 
-void playTone();
+void playTone(int8_t tone);
 
 
