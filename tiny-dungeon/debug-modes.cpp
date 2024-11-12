@@ -2,6 +2,7 @@
 #include "board.hh"
 #include <avr/pgmspace.h>
 #include <Arduino.h>
+#include "math.hh"
 
 void debugJoysticks(){
   uint8_t joystickPlotX[] = {82, 94, 106, 94, 22, 34, 46, 34};
@@ -112,4 +113,47 @@ void debugTone(){
       }
       delay(200);
     }
-};
+}
+
+// just a speed test for IPC and so on
+// from these results, about 300 C instructions can be completed "instantaneously" in user's perspective
+void debugCpu(){
+  MoveTo(0,56);
+  PlotText(PSTR("COUNT RANDS OVER 128"));
+  MoveTo(36,48);
+  PlotText(PSTR("LEFT STICK"));
+  MoveTo(0,40);
+  PlotText(PSTR("L 1K R 3K U 10K D 30K"));
+
+  for (;;){
+    uint8_t joystickState = getJoystickState();
+    if ((joystickState & (1 << STICK_LL | 1 << STICK_LR | 1 << STICK_LU | 1 << STICK_LD)) == 0){
+      continue; // no delay
+    }
+
+    MoveTo(54,16);
+    PlotText(PSTR("RUN"));
+    uint32_t counts = 0;
+    if (joystickState & (1 << STICK_LL)){
+      counts = 1000; // 400msec
+    }
+    if (joystickState & (1 << STICK_LR)){
+      counts = 3000; // 1sec
+    }
+    if (joystickState & (1 << STICK_LU)){
+      counts = 10000; // 4sec
+    }
+    if (joystickState & (1 << STICK_LD)){
+      counts = 30000; // 12sec
+    }
+
+    for (; counts > 0;){
+      if (nextByte() > 1 << 7){
+        counts--;
+      }
+    }
+
+    MoveTo(54,16);
+    PlotText(PSTR("OK "));
+  }
+}

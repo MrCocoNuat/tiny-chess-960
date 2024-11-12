@@ -51,10 +51,10 @@ const uint16_t timerTable[] = {
   11453, // F
   10810, // F#
   10204, // G
-  9631, // Ab
-  9090, // A
-  8580, // Bb
-  8098 // B
+  9631,  // Ab
+  9090,  // A
+  8580,  // Bb
+  8098   // B
 };
 // "reasonable" output for the speaker ranges from:
 // tone 21 = A2 to tone 81 = A7, outside of that the speaker sounds pretty bad...
