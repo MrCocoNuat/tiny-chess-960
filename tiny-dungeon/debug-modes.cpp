@@ -157,3 +157,28 @@ void debugCpu(){
     PlotText(PSTR("OK "));
   }
 }
+
+// how deep can you go? stack frame must contain a 4B param so this doesn't take forever
+void testStack(uint32_t x){
+  if (x == 0xFF){
+    return; // should never make it, but convinces the compiler to not optimize second recursive call as dead code
+  } 
+
+  MoveTo(x,0);
+  PlotText(PSTR("A"));
+  while (getJoystickState() == 0){}
+
+  testStack(x+1); // will overlap text but that is fine
+  testStack(x+1); // kill tail call optimization, this is never called
+}
+
+void debugStack(){
+  MoveTo(18, 48);
+  PlotText(PSTR("STACK SIZE TEST"));
+  MoveTo(9, 40);
+  PlotText(PSTR("PRESS ANY FOR AN A"));
+
+  testStack(0);
+}
+
+// 70 frames with 4B, 110 with 2B. So 110(2+x) = 70(4+x) => bare stack frame is 1.5B -> 380 used in testStack 

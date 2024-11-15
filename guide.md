@@ -57,6 +57,8 @@ Weapons can have a range greater than `1`, in which case they are able to hit at
 
 However, certain terrain features like doors or walls can block attacks from passing through them. Other features, like tall grass, will not stop attacks, but will still interrupt vision. This is the main opportunity to inflict surprise attacks - doors are especially powerful here because you can close them after you pass, and an enemy immediately following you will not be able to tell you are about to attack them!
 
+Not only do attacks have range, but so does the adventurer's vision! Past a certain distance, the Dungeon recedes into darkness, and while terrain can be committed to memory, mobile monsters certainly cannot! 
+
 ### Upgrades
 Magical Scrolls of Upgrade are found throughout the Dungeon and directly increase the power of equipment, as well as making them easier to use by lowering their strength requirements. Upgradable equipment can be improved up to +8.
 ```
@@ -85,7 +87,7 @@ The nearest floors of the Dungeon were repurposed into sewers to serve the bustl
 #### Barren Mines (5-8)
 In the old times, the citizens of the city extracted bounties of gold from the earth here. But now, the growing presence of monsters has made this place far too dangerous, and in any case there's no gold left to mine.
 
-#### Demon Halls (9-13)
+#### Demon Halls (9-12)
 Something horrible must have happened here in the depths from which none have ever returned, the walls seem of flesh and the air smells of searing iron. Everything about this hell screams silent madness...
 
 ## Bestiary
@@ -184,12 +186,13 @@ SPD: 0.5
 #### Demon Halls
 
 ##### Dread Ripper
-The most common form of demons, they skillfully shred armor and adventurer alike with their claws.
+The most common form of demons, they skillfully shred armor and adventurer alike with their claws causing terrible bleeding.
 ```
 HP: 60
 EVA: 20
 DEF: 4-8
 ATK: 8-12 ACC: 105
+ATK2: 1-6 ACC: 120 EFF: BLEED 1 DURATION: 4
 ```
 
 ##### Scorpio
@@ -214,7 +217,7 @@ ATK2: 18-30MAG ACC: 120 CHRG: 3 RNG: 99 DEF: +10-15
 ##### Yog-Dzewa
 A dark god that exists outside of our mortal plane, the wretched eye at the bottom of the Dungeon is but its first foothold of manifestation here. Beat it back with all your fury so that it never sees fit to invade this realm again!
 ```
-HP: 256
+HP: 255
 EVA: 20
 DEF: 4-10
 ATK1: 6-14MAG ACC: 140 RNG: 7
@@ -226,7 +229,7 @@ EFF: Yog's Fist INVULNERABLE RNG: 5
 ##### Yog's Fist
 Aspects of Yog-Dzewa's power emanating from its eye, these ferocious apparitions are deployed to hunt interlopers down. Worse, they become fully cloaked in the dark energy of Yog and are therefore invulnerable when nearby.
 ```
-HP: 128
+HP: 127
 EVA: 10
 DEF: 5-12
 ATK: 9-19 ACC: 125
@@ -295,40 +298,50 @@ CHRG: 0.04/TURN +0.02/TURN/UPGRADE
 ```
 
 ##### Wand of Regrowth
-New life appears bursting out of this young green magewood branch. Its blasts will bring forth a single tile of tall grass.
+New life appears bursting out of this young green magewood branch. Its blasts will bring forth a single tile of ephemeral tall grass.
 ```
 CHARGES: 1 +1/UPGRADE
 CHRG: 0.04/TURN +0.02/TURN/UPGRADE
 ```
 
 ##### Hexing Rod
-Profane runes are carved into this winged magewood rod. The magic emanating from it feels as if it makes one's grip weaker, who knows what effect it will have if applied directly on monsters?
+Profane runes are carved into this winged magewood rod. The magic emanating from it feels as if it makes one's grip weaker, who knows what effect it will have if unleashed and applied directly on monsters?
 ```
 EFF: ATK*0.75
+DURATION: 5
+
+EFF: BLEED 1
 DURATION: 5
 CHARGES: 2 +1/UPGRADE
 CHRG: 0.04/TURN +0.02/TURN/UPGRADE
 ```
 
 ##### Throwing Knife
-Well-balanced and quick to toss, these knives are a classic choice of adventurers everywhere. Durable enough to sink into a monster 10 times, up to 4 can be carried in a single stack.
+Well-balanced and quick to toss, these knives are a classic choice of adventurers everywhere. Durable enough to sink into a monster 4 times, up to 4 can be carried in a single stack.
 ```
 ATK: 4-12 ACC: 105 RNG: 99
 STR: 11
 ```
 
-##### Tomahawk
-Small light axes weighted to always strike soft bits edge first are the sneaky adventurer's favorite projectile. They are a little fragile, lasting only 5 hits, but up to 4 can be carried in a single stack.
+##### Grappling Claw
+A strange mechanical contraption stuck on the end of a sturdy chain, this weapon is designed to lock onto a monster it is thrown at, then be pulled by its wielder to . The delicate gearwork can only survive 3 hits, but up to 4 can be carried in a single stack.
 ```
-ATK: 4-16 ACC: 95 RNG:99
+ATK: 2-4 ACC: 140 RNG: 99 PULL: 1
+STR: 12
+```
+
+##### Tomahawk
+Small light axes weighted to always strike soft bits edge first are the sneaky adventurer's favorite projectile. They are a little fragile, lasting only 2 hits, but up to 4 can be carried in a single stack.
+```
+ATK: 4-16 ACC: 95 RNG: 99
 SURPRISE: ATK +6-0
 STR: 13
 ```
 
-##### Throwing Hammer
-A hefty block of steel solidly attached to a handle can deal real hurt at a distance. Their hardy construction lets them withstand 15 solid hits, and up to 4 can be carried in a single stack.
+##### Throwing Sledge
+A hefty block of steel solidly attached to a handle that can launch monsters backwards when thrown hard. Their hardy construction lets them withstand 6 solid hits, and up to 4 can be carried in a single stack.
 ```
-ATK: 8-18 ACC: 100 RNG: 99
+ATK: 6-14 ACC: 100 RNG: 99 PUSH: 1
 STR: 15
 ```
 
@@ -438,7 +451,7 @@ DURATION: 20
 #### Potion of Haste
 An sweet and sticky brew that causes its drinker to be able to run at tremendous speed for a quick duration. Throwing it at a monster will instead bind their body parts together, inhibiting their movement.
 ```
-EFF: SPD*3 DURATION: 20
+EFF: SPD*2 DURATION: 20
 
 EFF: SPD*0.5 DURATION: 20
 ```
