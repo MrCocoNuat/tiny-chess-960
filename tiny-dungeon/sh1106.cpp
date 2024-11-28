@@ -268,7 +268,15 @@ void PlotText(PGM_P s) {
   while (1) {
     char c = pgm_read_byte(p++);
     if (c == 0) return;
-    PlotChar(c, x0, y0 >> 3);
+      Wire.beginTransmission(address);
+  Single(0xB0 + (y0 >> 3));
+  // column is automatically incremented on display memory accessses so no need to keep re-setting it
+  Single(0x00 + ((x0 + 2) & 0x0F));  // initial Column low nibble
+  Single(0x10 + ((x0 + 2) >> 4));    // initial Column high nibble
+  Single(0xE0);                           // Read modify write
+  PlotCharInRMW(c);
+  Single(0xEE);  // Cancel read modify write
+  Wire.endTransmission();
     x0 = x0 + 6;
   }
 }
