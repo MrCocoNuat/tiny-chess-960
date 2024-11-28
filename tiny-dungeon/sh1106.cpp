@@ -37,7 +37,7 @@ int const onedata = 0xC0;
 
 // Character set for text - stored in program memory
 // 6 columns of 8
-const uint8_t CharMap[96][6] PROGMEM = {
+const uint8_t CHAR_MAP[96][6] PROGMEM = {
   { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
   { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00 },
   { 0x00, 0x07, 0x00, 0x07, 0x00, 0x00 },
@@ -142,16 +142,16 @@ int x0;
 int y0;
 
 // Send a single command
-void Single(uint8_t x) {
+void command(uint8_t x) {
   Wire.write(onecommand);
   Wire.write(x);
 }
 
-void InitI2C(){
+void initI2C(){
   Wire.begin();
 }
 
-void InitDisplay() {
+void initDisplay() {
   Wire.beginTransmission(address);
   Wire.write(commands);
   Wire.write(0xA1);  // Flip horizontal
@@ -159,10 +159,10 @@ void InitDisplay() {
   Wire.endTransmission();
 }
 
-void ClearDisplay() {
+void clearDisplay() {
   for (int p = 0; p < 8; p++) {
     Wire.beginTransmission(address);
-    Single(0xB0 + p);
+    command(0xB0 + p);
     Wire.endTransmission();
     for (int q = 0; q < 8; q++) {
       Wire.beginTransmission(address);
@@ -174,79 +174,97 @@ void ClearDisplay() {
 }
 
 void setupDisplay(){
-    InitI2C();
-    ClearDisplay();
-    InitDisplay();
+    initI2C();
+    clearDisplay();
+    initDisplay();
 }
 
 // Move current plot position to x,y
-void MoveTo(int x, int y) {
+void moveTo(int x, int y) {
   x0 = x;
   y0 = y;
 }
 
-uint8_t ReverseByte(uint8_t x) {
+void plotPoint (int x, int y) {
+  Wire.beginTransmission(address);
+  command(0x00 + ((x + 2) & 0x0F));        // Column low nibble
+  command(0x10 + ((x + 2)>>4));            // Column high nibble
+  command(0xB0 + (y >> 3));                // Page
+  command(0xE0);                           // Read modify write
+  Wire.write(onedata);
+  Wire.endTransmission();
+  Wire.requestFrom(address, 2);
+  Wire.read();                            // Dummy read
+  int j = Wire.read();
+  Wire.beginTransmission(address);
+  Wire.write(onedata);
+  Wire.write((1<<(y & 0x07)) | j);
+  command(0xEE);                           // Cancel read modify write
+  Wire.endTransmission();
+}
+
+uint8_t reverseByte(uint8_t x) {
   x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
   x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
   x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
   return x;
 }
 
-// private method - plot a char at the current position, and also assumes caller already placed display in ReadModifyWrite mode
-PlotCharInRMW(int c) {
+// private method - write bytes of a char, assuming caller already placed display in ReadModifyWrite mode
+writeChar(int c) {
   for (int col = 0; col < 6; col++) {
     Wire.write(onedata);
     Wire.write(
-      ReverseByte( // i'd rather reverse the sprite maps instead
-          pgm_read_byte(&CharMap[c - 32][col])
+      reverseByte( // i'd rather reverse the sprite maps instead
+          pgm_read_byte(&CHAR_MAP[c - 32][col])
           )
       );
   }
 }
 
-// Plot an ASCII character with bottom left corner at x,y
+// Plot an ASCII character with bottom left corner at x in vertical page
 // only supports y divisible by 8, hence page instead of y
-void PlotChar(int c, int x, int page) {
+void plotChar(int c, int x, int page) {
   Wire.beginTransmission(address);
-  Single(0xB0 + page);
+  command(0xB0 + page);
   // column is automatically incremented on display memory accessses so no need to keep re-setting it
-  Single(0x00 + ((x + 2) & 0x0F));  // initial Column low nibble
-  Single(0x10 + ((x + 2) >> 4));    // initial Column high nibble
-  Single(0xE0);                           // Read modify write
-  PlotCharInRMW(c);
-  Single(0xEE);  // Cancel read modify write
+  command(0x00 + ((x + 2) & 0x0F));  // initial Column low nibble
+  command(0x10 + ((x + 2) >> 4));    // initial Column high nibble
+  command(0xE0);  // enter read modify write
+  writeChar(c);
+  command(0xEE);  // exit read modify write
   Wire.endTransmission();
 }
 
 // Plot text starting at the current plot position - really really fast, a full screen in 0.2 seconds
-void PlotText(PGM_P s) {
+void plotText(PGM_P s) {
   int p = (int) s;
   Wire.beginTransmission(address);
-  Single(0xB0 + (y0 >> 3));
+  command(0xB0 + (y0 >> 3));
   // column is automatically incremented on display memory writes so no need to keep re-setting it!
-  Single(0x00 + ((x0 + 2) & 0x0F));  // initial Column low nibble
-  Single(0x10 + ((x0 + 2) >> 4));    // initial Column high nibble
-  Single(0xE0); // Read modify write
-  while (1) {
+  command(0x00 + ((x0 + 2) & 0x0F));  // initial Column low nibble
+  command(0x10 + ((x0 + 2) >> 4));    // initial Column high nibble
+  command(0xE0); // enter read modify write
+  while (true) {
     char c = pgm_read_byte(p++);
     if (c == 0) break;
-    Wire.endTransmission(); // really small i2c buffer! so call this per character
+    Wire.endTransmission(); // microcontroller has a really small i2c buffer! so flush it per character
     Wire.beginTransmission(address);
-    PlotCharInRMW(c);
+    writeChar(c);
   }
-  Single(0xEE);  // end read modify write
+  command(0xEE);  // exit read modify write
   Wire.endTransmission();
-} // 11 column limit? might be wire buffer?
+}
 
 void invert(){
   Wire.beginTransmission(address);
-  Single(0xA7); // inverse display output
+  command(0xA7); // inverse display output
   Wire.endTransmission();
 }
 
 void unInvert(){
   Wire.beginTransmission(address);
-  Single(0xA6);
+  command(0xA6);
   Wire.endTransmission();
 }
 
@@ -261,28 +279,28 @@ void blink(){
 // these disregard the "invert" state
 void forceDisplayAllOff(){
   Wire.beginTransmission(address);
-  Single(0xAE); // turn display off - overrides any other command effect
+  command(0xAE); // turn display off - overrides any other command effect
   Wire.endTransmission();
 }
 
 void forceDisplayAllOn(){
   Wire.beginTransmission(address);
-  Single(0xA5); // force all segments on
+  command(0xA5); // force all segments on
   Wire.endTransmission();
 }
 
 void resetForceDisplay(){
   Wire.beginTransmission(address);
-  Single(0xA4); // undo force all segments on
-  Single(0xAF); // turn display back on
+  command(0xA4); // undo force all segments on
+  command(0xAF); // turn display back on
   Wire.endTransmission();
 }
 // contrast but for OLEDs
 // default is 1 << 7
 void setBrightness(uint8_t brightness){ 
   Wire.beginTransmission(address);
-  Single(0x81); // enable contrast control mode
-  Single(brightness); // send it, and exit contrast control mode
+  command(0x81); // enable contrast control mode
+  command(brightness); // send it, and exit contrast control mode
   Wire.endTransmission();
 }
 
@@ -294,7 +312,7 @@ void resetBrightness(){
 // loops the display ram across the display with this offset
 void setScroll(uint8_t lines){
   Wire.beginTransmission(address);
-  Single(0x40 | (lines & 0x3F));
+  command(0x40 | (lines & 0x3F));
   Wire.endTransmission();
 }
 

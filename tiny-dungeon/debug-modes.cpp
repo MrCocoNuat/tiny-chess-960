@@ -11,17 +11,17 @@ void debugJoysticks(){
   volatile uint8_t prevJoystickState = 0b00000000;
   volatile uint8_t joystickState = 0b00000000;
 
-  MoveTo(24,48);
-  PlotText(PSTR("JOYSTICK  TEST"));
+  moveTo(24,48);
+  plotText(PSTR("JOYSTICK  TEST"));
   for (int i = 7; i >= 0; i--) {
-    PlotChar('0', joystickPlotX[i], joystickPlotY[i] >> 3);
+    plotChar('0', joystickPlotX[i], joystickPlotY[i] >> 3);
   }
   for (;;) {
     prevJoystickState = joystickState;
     joystickState = getJoystickState();
     for (int i = 7; i >= 0; i--) {
       if ((joystickState & (1 << i)) ^ (prevJoystickState & (1 << i))) { // there is a difference in this joystick input!
-        PlotChar((joystickState & (1 << i)) ? '1' : '0', joystickPlotX[i], joystickPlotY[i] >> 3);
+        plotChar((joystickState & (1 << i)) ? '1' : '0', joystickPlotX[i], joystickPlotY[i] >> 3);
       }
     }
   }
@@ -36,17 +36,17 @@ void debugDisplay(){
   uint8_t scroll = 0;
 
   // light up the corners
-  PlotPoint(0,0);
-  PlotPoint(127,63);
-  PlotPoint(0,63);
-  PlotPoint(127,0);
+  plotPoint(0,0);
+  plotPoint(127,63);
+  plotPoint(0,63);
+  plotPoint(127,0);
 
-  MoveTo(30,48);
-  PlotText(PSTR("DISPLAY TEST"));
-  MoveTo(6,40);
-  PlotText(PSTR("RIGHT SCROLL/BRIGHT"));
-  MoveTo(12,32);
-  PlotText(PSTR("LEFT INVERT/FORCE"));
+  moveTo(30,48);
+  plotText(PSTR("DISPLAY TEST"));
+  moveTo(6,40);
+  plotText(PSTR("RIGHT SCROLL/BRIGHT"));
+  moveTo(12,32);
+  plotText(PSTR("LEFT INVERT/FORCE"));
 
   for (;;){
     uint8_t joystickState = getJoystickState();
@@ -87,12 +87,12 @@ void debugDisplay(){
 void debugTone(){
     int8_t tone = 24;
 
-    MoveTo(30,48);
-    PlotText(PSTR("SPEAKER TEST"));
-    MoveTo(9,40);
-    PlotText(PSTR("RIGHT STICK L MUTE"));
-    MoveTo(18,32);
-    PlotText(PSTR("U/D CHANGE TONE"));
+    moveTo(30,48);
+    plotText(PSTR("SPEAKER TEST"));
+    moveTo(9,40);
+    plotText(PSTR("RIGHT STICK L MUTE"));
+    moveTo(18,32);
+    plotText(PSTR("U/D CHANGE TONE"));
 
     for (;;){
       uint8_t joystickState = getJoystickState();
@@ -118,12 +118,12 @@ void debugTone(){
 // just a speed test for IPC and so on
 // from these results, about 300 C instructions can be completed "instantaneously" in user's perspective
 void debugCpu(){
-  MoveTo(0,56);
-  PlotText(PSTR("COUNT RANDS OVER 128"));
-  MoveTo(36,48);
-  PlotText(PSTR("LEFT STICK"));
-  MoveTo(0,40);
-  PlotText(PSTR("L 1K R 3K U 10K D 30K"));
+  moveTo(0,56);
+  plotText(PSTR("COUNT RANDS OVER 128"));
+  moveTo(36,48);
+  plotText(PSTR("LEFT STICK"));
+  moveTo(0,40);
+  plotText(PSTR("L 1K R 3K U 10K D 30K"));
 
   for (;;){
     uint8_t joystickState = getJoystickState();
@@ -131,8 +131,8 @@ void debugCpu(){
       continue; // no delay
     }
 
-    MoveTo(54,16);
-    PlotText(PSTR("RUN"));
+    moveTo(54,16);
+    plotText(PSTR("RUN"));
     uint32_t counts = 0;
     if (joystickState & (1 << STICK_LL)){
       counts = 1000; // 400msec
@@ -153,8 +153,8 @@ void debugCpu(){
       }
     }
 
-    MoveTo(54,16);
-    PlotText(PSTR("OK "));
+    moveTo(54,16);
+    plotText(PSTR("OK "));
   }
 }
 
@@ -164,8 +164,8 @@ void testStack(uint32_t x){
     return; // should never make it, but convinces the compiler to not optimize second recursive call as dead code
   } 
 
-  MoveTo(x,0);
-  PlotText(PSTR("A"));
+  moveTo(x,0);
+  plotText(PSTR("A"));
   while (getJoystickState() == 0){}
 
   testStack(x+1); // will overlap text but that is fine
@@ -173,22 +173,26 @@ void testStack(uint32_t x){
 }
 
 void debugStack(){
-  MoveTo(18, 48);
-  PlotText(PSTR("STACK SIZE TEST"));
-  MoveTo(9, 40);
-  PlotText(PSTR("PRESS ANY FOR AN A"));
+  moveTo(18, 48);
+  plotText(PSTR("STACK SIZE TEST"));
+  moveTo(9, 40);
+  plotText(PSTR("PRESS ANY FOR AN A"));
 
   testStack(0);
 }
 
 // 70 frames with 4B, 110 with 2B. So 110(2+x) = 70(4+x) => bare stack frame is 1.5B -> 380 used in testStack 
 
-void debugDisplaySpeed(){
+void debugDisplayRefreshRate(){
+  clearDisplay();
   for(;;){
-    ClearDisplay();
     for(uint8_t i = 0; i < 8; i++){
-      MoveTo(0, 8*i);
-      PlotText(PSTR("XXX\x7f B\x7f C\x7f D\x7f E\x7f F\x7f G"));
+      moveTo(0, 8*i);
+      plotText(PSTR("DISPLAY REFRESH TEST"));
+    }
+    for(uint8_t i = 0; i < 8; i++){
+      moveTo(0, 8*i);
+      plotText(PSTR(" DISPLAY REFRESH TEST"));
     }
   }
 }

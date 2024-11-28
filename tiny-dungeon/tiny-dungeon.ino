@@ -3,7 +3,7 @@
 #include "debug-modes.hh"
 
 // ATtiny84
-// 8MHz operation
+// 8MHz (but really OSCCAL = 0xFF) operation
 
 void setup(){
   setupBoard();
@@ -11,7 +11,7 @@ void setup(){
 }
 
 void loop() {
-  debugDisplaySpeed();
+  debugDisplayRefreshRate();
 }
 
 

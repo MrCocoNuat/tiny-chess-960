@@ -2,20 +2,19 @@
 
 #include <avr/pgmspace.h>
 
-void InitI2C();
-void Single(uint8_t x);
-void InitDisplay();
+void initI2C();
+void command(uint8_t x);
+void plotPoint (int x, int y);
+void initDisplay();
 void invert();
 void unInvert();
 void blink();
-void ClearDisplay();
+void clearDisplay();
 void setupDisplay();
-void PlotPoint(int x, int y);
-void MoveTo(int x, int y);
-void DrawTo(int x, int y);
-uint8_t ReverseByte(uint8_t x);
-void PlotChar(int c, int x, int page);
-void PlotText(PGM_P s);
+void moveTo(int x, int y);
+uint8_t reverseByte(uint8_t x);
+void plotChar(int c, int x, int page);
+void plotText(PGM_P s);
 void forceDisplayAllOff();
 void forceDisplayAllOn();
 void resetForceDisplay();
