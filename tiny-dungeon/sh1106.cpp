@@ -236,6 +236,18 @@ uint8_t ReverseByte(uint8_t x) {
   return x;
 }
 
+// private method - plot a char at the current position, and also assumes caller already placed display in ReadModifyWrite mode
+PlotCharInRMW(int c) {
+  for (int col = 0; col < 6; col++) {
+    Wire.write(onedata);
+    Wire.write(
+        ReverseByte( // reverse the sprite maps instead
+            pgm_read_byte(&CharMap[c - 32][col])
+            )
+        );
+  }
+}
+
 // Plot an ASCII character with bottom left corner at x,y
 // only supports y divisible by 8, hence page instead of y
 void PlotChar(int c, int x, int page) {
@@ -245,14 +257,7 @@ void PlotChar(int c, int x, int page) {
   Single(0x00 + ((x + 2) & 0x0F));  // initial Column low nibble
   Single(0x10 + ((x + 2) >> 4));    // initial Column high nibble
   Single(0xE0);                           // Read modify write
-  for (int col = 0; col < 6; col++) {
-    Wire.write(onedata);
-    Wire.write(
-       ReverseByte( // reverse the sprite maps instead
-        pgm_read_byte(&CharMap[c - 32][col])
-         )
-        );
-  }
+  PlotCharInRMW(c);
   Single(0xEE);  // Cancel read modify write
   Wire.endTransmission();
 }

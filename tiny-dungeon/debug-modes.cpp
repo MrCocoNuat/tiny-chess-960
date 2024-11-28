@@ -188,7 +188,7 @@ void debugDisplaySpeed(){
     ClearDisplay();
     for(uint8_t i = 0; i < 8; i++){
       MoveTo(0, 8*i);
-      PlotText(PSTR("\x7f A\x7f B\x7f C\x7f D\x7f E\x7f F\x7f G"));
+      PlotText(PSTR("X A\x7f B\x7f C\x7f D\x7f E\x7f F\x7f G"));
     }
   }
 }
