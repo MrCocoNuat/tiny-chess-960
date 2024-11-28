@@ -141,7 +141,7 @@ const uint8_t CharMap[96][6] PROGMEM = {
 int x0;
 int y0;
 
-// Write a single command
+// Send a single command
 void Single(uint8_t x) {
   Wire.write(onecommand);
   Wire.write(x);
@@ -179,54 +179,10 @@ void setupDisplay(){
     InitDisplay();
 }
 
-// Plot point x,y into buffer if in current slice
-void PlotPoint(int x, int y) {
-  Wire.beginTransmission(address);
-  Single(0x00 + ((x + 2) & 0x0F));  // Column low nibble
-  Single(0x10 + ((x + 2) >> 4));    // Column high nibble
-  Single(0xB0 + (y >> 3));          // Page
-  Single(0xE0);                     // Read modify write
-  Wire.write(onedata);
-  Wire.endTransmission();
-  Wire.requestFrom(address, 2);
-  Wire.read();  // Dummy read
-  int j = Wire.read();
-  Wire.beginTransmission(address);
-  Wire.write(onedata);
-  Wire.write((1 << (y & 0x07)) | j);
-  Single(0xEE);  // Cancel read modify write
-  Wire.endTransmission();
-}
-
 // Move current plot position to x,y
 void MoveTo(int x, int y) {
   x0 = x;
   y0 = y;
-}
-
-// Draw a line to x,y
-void DrawTo(int x, int y) {
-  int sx, sy, e2, err;
-  int dx = abs(x - x0);
-  int dy = abs(y - y0);
-  if (x0 < x) sx = 1;
-  else sx = -1;
-  if (y0 < y) sy = 1;
-  else sy = -1;
-  err = dx - dy;
-  for (;;) {
-    PlotPoint(x0, y0);
-    if (x0 == x && y0 == y) return;
-    e2 = err << 1;
-    if (e2 > -dy) {
-      err = err - dy;
-      x0 = x0 + sx;
-    }
-    if (e2 < dx) {
-      err = err + dx;
-      y0 = y0 + sy;
-    }
-  }
 }
 
 uint8_t ReverseByte(uint8_t x) {
@@ -241,10 +197,10 @@ PlotCharInRMW(int c) {
   for (int col = 0; col < 6; col++) {
     Wire.write(onedata);
     Wire.write(
-        ReverseByte( // reverse the sprite maps instead
-            pgm_read_byte(&CharMap[c - 32][col])
-            )
-        );
+      ReverseByte( // i'd rather reverse the sprite maps instead
+          pgm_read_byte(&CharMap[c - 32][col])
+          )
+      );
   }
 }
 
@@ -262,24 +218,25 @@ void PlotChar(int c, int x, int page) {
   Wire.endTransmission();
 }
 
-// Plot text starting at the current plot position
+// Plot text starting at the current plot position - really really fast, a full screen in 0.2 seconds
 void PlotText(PGM_P s) {
   int p = (int) s;
-  while (1) {
-    char c = pgm_read_byte(p++);
-    if (c == 0) return;
-      Wire.beginTransmission(address);
+  Wire.beginTransmission(address);
   Single(0xB0 + (y0 >> 3));
-  // column is automatically incremented on display memory accessses so no need to keep re-setting it
+  // column is automatically incremented on display memory writes so no need to keep re-setting it!
   Single(0x00 + ((x0 + 2) & 0x0F));  // initial Column low nibble
   Single(0x10 + ((x0 + 2) >> 4));    // initial Column high nibble
-  Single(0xE0);                           // Read modify write
-  PlotCharInRMW(c);
-  Single(0xEE);  // Cancel read modify write
-  Wire.endTransmission();
-    x0 = x0 + 6;
+  Single(0xE0); // Read modify write
+  while (1) {
+    char c = pgm_read_byte(p++);
+    if (c == 0) break;
+    Wire.endTransmission(); // really small i2c buffer! so call this per character
+    Wire.beginTransmission(address);
+    PlotCharInRMW(c);
   }
-}
+  Single(0xEE);  // end read modify write
+  Wire.endTransmission();
+} // 11 column limit? might be wire buffer?
 
 void invert(){
   Wire.beginTransmission(address);
