@@ -182,3 +182,15 @@ void debugStack(){
 }
 
 // 70 frames with 4B, 110 with 2B. So 110(2+x) = 70(4+x) => bare stack frame is 1.5B -> 380 used in testStack 
+
+void debugDisplaySpeed(){
+  for(;;){
+    ClearDisplay();
+    for(uint8_t i = 0; i < 8; i++){
+      MoveTo(0, 8*i);
+      PlotText(PSTR("\x7f A\x7f B\x7f C\x7f D\x7f E\x7f F\x7f G"));
+    }
+  }
+}
+
+

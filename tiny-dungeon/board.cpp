@@ -2,6 +2,8 @@
 #include <avr/interrupt.h>
 
 void setupBoard() {
+  OSCCAL = 0xFF; // go as fast as possible
+
   // pins: <L/R><L/R/U/D> are left/right 'joystick' directions
   //     ------------------
   //    -| VCC        GND |-

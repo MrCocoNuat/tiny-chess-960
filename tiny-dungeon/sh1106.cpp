@@ -240,20 +240,20 @@ uint8_t ReverseByte(uint8_t x) {
 // only supports y divisible by 8, hence page instead of y
 void PlotChar(int c, int x, int page) {
   Wire.beginTransmission(address);
-  Single(0xB0 + page); 
+  Single(0xB0 + page);
+  // column is automatically incremented on display memory accessses so no need to keep re-setting it
+  Single(0x00 + ((x + 2) & 0x0F));  // initial Column low nibble
+  Single(0x10 + ((x + 2) >> 4));    // initial Column high nibble
+  Single(0xE0);                           // Read modify write
   for (int col = 0; col < 6; col++) {
-    Single(0x00 + ((x + 2 + col) & 0x0F));  // Column low nibble
-    Single(0x10 + ((x + 2 + col) >> 4));    // Column high nibble
-    Single(0xE0);                           // Read modify write
     Wire.write(onedata);
-    Wire.endTransmission();
-    Wire.requestFrom(address, 2);
-    Wire.beginTransmission(address);
-    Wire.write(onedata);
-    int bits = ReverseByte(pgm_read_byte(&CharMap[c - 32][col]));
-    Wire.write(bits);
-    Single(0xEE);  // Cancel read modify write
+    Wire.write(
+       ReverseByte( // reverse the sprite maps instead
+        pgm_read_byte(&CharMap[c - 32][col])
+         )
+        );
   }
+  Single(0xEE);  // Cancel read modify write
   Wire.endTransmission();
 }
 
@@ -283,7 +283,7 @@ void unInvert(){
 // the above 2 in a row
 void blink(){
   invert();
-  delay(50);
+  delay(100);
   unInvert();
 }
 
