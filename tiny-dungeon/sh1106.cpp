@@ -217,8 +217,8 @@ writeChar(int c) {
     Wire.write(
       reverseByte( // i'd rather reverse the sprite maps instead
           pgm_read_byte(&CHAR_MAP[c - 32][col])
-          )
-      );
+      )
+    );
   }
 }
 

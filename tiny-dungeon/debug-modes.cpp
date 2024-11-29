@@ -188,7 +188,7 @@ void debugDisplayRefreshRate(){
   for(;;){
     for(uint8_t i = 0; i < 8; i++){
       moveTo(0, 8*i);
-      plotText(PSTR("DISPLAY REFRESH TEST"));
+      plotText(PSTR("DISPLAY REFRESH TEST "));
     }
     for(uint8_t i = 0; i < 8; i++){
       moveTo(0, 8*i);
