@@ -5,6 +5,8 @@
 // ATtiny84
 // 8MHz (but really OSCCAL = 0xFF) operation
 
+uint8_t displayBuffer[][]
+
 void setup(){
   setupBoard();
   setupDisplay();
