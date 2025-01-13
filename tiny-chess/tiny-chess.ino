@@ -1,20 +1,20 @@
 #include "sh1106.hh"
 #include "board.hh"
 #include "debug-modes.hh"
+#include "engine.hh"
 
 // ATtiny84
 // 8MHz (but really OSCCAL = 0xFF) operation
 
-uint8_t displayBuffer[][]
-
 void setup(){
   setupBoard();
   setupDisplay();
+
+  fillInOpeningPositions(0);
+  blitBoard();
 }
 
-void loop() {
-  debugDisplayRefreshRate();
-}
+void loop() {}
 
 
 
