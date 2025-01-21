@@ -222,6 +222,7 @@ bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank)
   // needs to be a move in the first place FIXME: attacks needs to have a target, moves needs to not have one (this also obsoletes self-capture checks)
   if (!moves(board, fromFile, fromRank, toFile, toRank) && !attacks(board, fromFile, fromRank, toFile, toRank)) return false;
 
+// FIXME doesn't work when the king moves
   // legal move is one that does not have your own king under attack immediately afterwards
   // simulate the move
   uint8_t destinationContents = board[toFile][toRank];
@@ -230,11 +231,14 @@ bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank)
   // check for opening own king to attack
   uint8_t kingFile = kingFiles[turn & MASK_TURN_BLACK];
   uint8_t kingRank = kingRanks[turn & MASK_TURN_BLACK];
+
   bool opensKing = false;
-  for(uint8_t f = 0; f < 8; f++){
+  for(uint8_t f = 0; !opensKing && f < 8; f++){
     for(uint8_t r = 0; r < 8; r++){
-      // just opponent's pieces:
-      if (board[f][r] & MASK_PIECE_EXISTS || (board[f][r] & MASK_BLACK_ALLEGIANCE == board[kingFile][kingRank] & MASK_BLACK_ALLEGIANCE)) continue;
+      // just check for opponent's pieces:
+      if (!(board[f][r] & MASK_PIECE_EXISTS) || ((board[f][r] & MASK_BLACK_ALLEGIANCE) == (board[kingFile][kingRank] & MASK_BLACK_ALLEGIANCE))){
+        continue;
+      }
       // yeah this is a lot of calls to attacks... but who cares? it finishes fast enough, and space (both memory and program code) is much much more valuable than time here:
       if (attacks(board, f, r, kingFile, kingRank)){
           opensKing = true;
@@ -365,6 +369,7 @@ void doIt() {
           // put piece back down where it was?
           if (cursorFile == handFile && cursorRank == handRank) {
             superState = CONTEMPLATING;
+            blitBoard();
             break;
           }
           // put piece down anew to make a move; 
@@ -374,6 +379,7 @@ void doIt() {
             turn++;
             superState = CONTEMPLATING; 
             blitBoard();
+            break;
           }
           // not legal move? ignore
           break;
