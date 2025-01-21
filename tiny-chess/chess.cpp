@@ -8,8 +8,8 @@ uint8_t turn;          // even = white odd = black
 const uint8_t MASK_TURN_BLACK = 1;
 
 const uint8_t MASK_PIECE_EXISTS = 0x7;
-const uint8_t MASK_JUST_DOUBLE_MOVED = 1 << 5; // for en-passant
-const uint8_t MASK_NEVER_MOVED = 1 << 4; // 
+const uint8_t MASK_JUST_DOUBLE_MOVED = 1 << 5;  // for en-passant
+const uint8_t MASK_NEVER_MOVED = 1 << 4;        //
 #define BIT_BLACK_ALLEGIANCE 3
 const uint8_t MASK_BLACK_ALLEGIANCE = 1 << 3;
 
@@ -93,9 +93,9 @@ void fillInOpeningPositions(uint16_t seed) {
 }
 
 uint8_t spriteAt(uint8_t file, uint8_t rank) {
-  return board[file][rank] & MASK_PIECE_EXISTS          // is there a piece at all?
-           ? board[file][rank] & 0xF      // render the piece itself with its allegiance
-           : ((file + rank) & 0x1) << 3;  // empty, render the tile instead: black tile (0 << 3) for even squares, white (1 << 3) for odd
+  return board[file][rank] & MASK_PIECE_EXISTS  // is there a piece at all?
+           ? board[file][rank] & 0xF            // render the piece itself with its allegiance
+           : ((file + rank) & 0x1) << 3;        // empty, render the tile instead: black tile (0 << 3) for even squares, white (1 << 3) for odd
 }
 
 void blitBoard() {
@@ -146,12 +146,14 @@ bool bishopAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, u
 
 bool rookAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
   if ((toFile != fromFile && toRank != fromRank)
-  || (toFile == fromFile && toRank == fromRank)) {
+      || (toFile == fromFile && toRank == fromRank)) {
     return false;
   }
 
-  int8_t fileDirection = (toFile > fromFile) ? 1 : (toFile == fromFile) ? 0 : -1;
-  int8_t rankDirection = (toRank > fromRank) ? 1 : (toRank == fromRank) ? 0 : -1;
+  int8_t fileDirection = (toFile > fromFile) ? 1 : (toFile == fromFile) ? 0
+                                                                        : -1;
+  int8_t rankDirection = (toRank > fromRank) ? 1 : (toRank == fromRank) ? 0
+                                                                        : -1;
 
   bool unblockedStraight = true;
   for (uint8_t f = fromFile + fileDirection, r = fromRank + rankDirection; f != toFile || r != toRank; f += fileDirection, r += rankDirection)
@@ -165,64 +167,63 @@ bool rookAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uin
 // this costs around 400B... suspiciously terrible! likely the compiled code is optimizing out the pieceType computation and doesn't even do the same job
 // also inefficient for finding legal slider moves, this calls "is there an empty path to here" on the same path over and over again
 bool attacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
-    // no own-capturing!
-    if (theBoard[toFile][toRank] & MASK_PIECE_EXISTS && (theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE == theBoard[toFile][toRank] & MASK_BLACK_ALLEGIANCE)) return false;
 
-    uint8_t pieceType = theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS;
-    if (pieceType == PAWN) {
-        // for the pawn to go "forward", how does its rank change? 1 for white, -1 for black
-        int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
-        return toRank - fromRank == forwardOne
-               && (fromFile - toFile == 1 || toFile - fromFile == 1);
-    }
-    if (pieceType == KNIGHT) {
-        return (norm(toRank - fromRank) == 2 && norm(toFile - fromFile) == 1)
-        || (norm(toRank - fromRank) == 1 && norm(toFile - fromFile) == 2);
-    }
-    if (pieceType == KING) {
-        return (toRank - fromRank || toFile - fromFile)
-               && (norm(toRank - fromRank) <= 1)
-               && (norm(toFile - fromFile) <= 1);
-    }
-    if (pieceType == QUEEN) {
-        return bishopAttacks(theBoard, fromFile, fromRank, toFile, toRank) || rookAttacks(theBoard, fromFile, fromRank, toFile, toRank);
-    }
-    if (pieceType == BISHOP) {
-        return bishopAttacks(theBoard, fromFile, fromRank, toFile, toRank);
-    }
-    if (pieceType == ROOK) {
-        return rookAttacks(theBoard, fromFile, fromRank, toFile, toRank);
-    }
-    return false;
+  uint8_t pieceType = theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS;
+  if (pieceType == PAWN) {
+    // for the pawn to go "forward", how does its rank change? 1 for white, -1 for black
+    int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
+    return toRank - fromRank == forwardOne
+           && (fromFile - toFile == 1 || toFile - fromFile == 1);
+  }
+  if (pieceType == KNIGHT) {
+    return (norm(toRank - fromRank) == 2 && norm(toFile - fromFile) == 1)
+           || (norm(toRank - fromRank) == 1 && norm(toFile - fromFile) == 2);
+  }
+  if (pieceType == KING) {
+    return (toRank - fromRank || toFile - fromFile)
+           && (norm(toRank - fromRank) <= 1)
+           && (norm(toFile - fromFile) <= 1);
+  }
+  if (pieceType == QUEEN) {
+    return bishopAttacks(theBoard, fromFile, fromRank, toFile, toRank) || rookAttacks(theBoard, fromFile, fromRank, toFile, toRank);
+  }
+  if (pieceType == BISHOP) {
+    return bishopAttacks(theBoard, fromFile, fromRank, toFile, toRank);
+  }
+  if (pieceType == ROOK) {
+    return rookAttacks(theBoard, fromFile, fromRank, toFile, toRank);
+  }
+  return false;
 }
 
-bool moves(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank){
-    // no own-capturing!
-    if (theBoard[toFile][toRank] & MASK_PIECE_EXISTS && (theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE == theBoard[toFile][toRank] & MASK_BLACK_ALLEGIANCE)) return false;
+bool moves(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
 
-    uint8_t pieceType = theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS;
-    if (pieceType == PAWN) {
-        if (fromFile != toFile) return false;
-        // for the pawn to go "forward", how does its rank change? 1 for white, -1 for black
-        int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
-        uint8_t startingRank = (theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE)? 6 : 1;
-        if (fromRank == startingRank){
-          // double move
-          if (toRank - fromRank == forwardOne * 2) return true;
-        }
-        return toRank - fromRank == forwardOne;
+  uint8_t pieceType = theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS;
+  if (pieceType == PAWN) {
+    if (fromFile != toFile) return false;
+    // for the pawn to go "forward", how does its rank change? 1 for white, -1 for black
+    int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
+    uint8_t startingRank = (theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) ? 6 : 1;
+    if (fromRank == startingRank) {
+      // double move
+      if (toRank - fromRank == forwardOne * 2) return true;
     }
-    // all other pieces move like they attack
-    return attacks(theBoard, fromFile, fromRank, toFile, toRank);
+    return toRank - fromRank == forwardOne;
+  }
+  // all other pieces move like they attack
+  return attacks(theBoard, fromFile, fromRank, toFile, toRank);
 }
 
 // pre-supposes that from actually has a piece on it
-bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank){
+bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
+  // needs to be a move or capture in the first place
+  if (!(
+        (moves(board, fromFile, fromRank, toFile, toRank) && !(board[toFile][toRank] & MASK_PIECE_EXISTS))
+        || (attacks(board, fromFile, fromRank, toFile, toRank) && board[toFile][toRank] & MASK_PIECE_EXISTS && ((board[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (board[toFile][toRank] & MASK_BLACK_ALLEGIANCE))))) {
+    return false;
+  }
 
-  // needs to be a move in the first place FIXME: attacks needs to have a target, moves needs to not have one (this also obsoletes self-capture checks)
-  if (!moves(board, fromFile, fromRank, toFile, toRank) && !attacks(board, fromFile, fromRank, toFile, toRank)) return false;
-
-// FIXME doesn't work when the king moves
+  // FIXME doesn't work when the king moves
   // legal move is one that does not have your own king under attack immediately afterwards
   // simulate the move
   uint8_t destinationContents = board[toFile][toRank];
@@ -233,16 +234,16 @@ bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank)
   uint8_t kingRank = kingRanks[turn & MASK_TURN_BLACK];
 
   bool opensKing = false;
-  for(uint8_t f = 0; !opensKing && f < 8; f++){
-    for(uint8_t r = 0; r < 8; r++){
+  for (uint8_t f = 0; !opensKing && f < 8; f++) {
+    for (uint8_t r = 0; r < 8; r++) {
       // just check for opponent's pieces:
-      if (!(board[f][r] & MASK_PIECE_EXISTS) || ((board[f][r] & MASK_BLACK_ALLEGIANCE) == (board[kingFile][kingRank] & MASK_BLACK_ALLEGIANCE))){
+      if (!(board[f][r] & MASK_PIECE_EXISTS) || ((board[f][r] & MASK_BLACK_ALLEGIANCE) == (board[kingFile][kingRank] & MASK_BLACK_ALLEGIANCE))) {
         continue;
       }
       // yeah this is a lot of calls to attacks... but who cares? it finishes fast enough, and space (both memory and program code) is much much more valuable than time here:
-      if (attacks(board, f, r, kingFile, kingRank)){
-          opensKing = true;
-          break;
+      if (attacks(board, f, r, kingFile, kingRank)) {
+        opensKing = true;
+        break;
       }
     }
   }
@@ -254,9 +255,9 @@ bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank)
   return true;
 }
 
-bool anyLegal(){
-    bool anyLegalMoves = true;
-    return anyLegalMoves;
+bool anyLegal() {
+  bool anyLegalMoves = true;
+  return anyLegalMoves;
 }
 
 // prevent the same input from immediately repeating, like xrate
@@ -315,7 +316,7 @@ void doIt() {
           // cursor movement triggered: restore the sprite on which the cursor was
           moveTo(cursorFile << 3, cursorRank << 3);
           plotSprite(spriteAt(cursorFile, cursorRank));
-\
+
           // which button/bit of joystickState was that?
           // no branches
           cursorFile += (joystickState == (1 << STICK_LR)) - (joystickState == (1 << STICK_LL));
@@ -330,9 +331,9 @@ void doIt() {
 
         // piece up?
         if (joystickState & (1 << STICK_RU)) {
-          // not own piece (piece is black == turn counter is black)? ignore FIXME restore this
+          // not own piece (piece is black == turn counter is black)?
           if (!(board[cursorFile][cursorRank] & MASK_PIECE_EXISTS)
-                || (((board[cursorFile][cursorRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE) != (turn & MASK_TURN_BLACK))) break;
+              || (((board[cursorFile][cursorRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE) != (turn & MASK_TURN_BLACK))) break;
           superState = PIECE_IN_HAND;
           handFile = cursorFile;
           handRank = cursorRank;
@@ -372,12 +373,12 @@ void doIt() {
             blitBoard();
             break;
           }
-          // put piece down anew to make a move; 
-          if (isLegal(handFile, handRank, cursorFile, cursorRank)){
-            board[cursorFile][cursorRank] = board[handFile][handRank]; // FIXME need to clear special flags!
+          // put piece down anew to make a move;
+          if (isLegal(handFile, handRank, cursorFile, cursorRank)) {
+            board[cursorFile][cursorRank] = board[handFile][handRank];  // FIXME need to clear special flags! in a movePiece function
             board[handFile][handRank] = EMPTY;
             turn++;
-            superState = CONTEMPLATING; 
+            superState = CONTEMPLATING;
             blitBoard();
             break;
           }
