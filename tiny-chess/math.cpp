@@ -19,3 +19,6 @@ uint8_t nextByte(){
   return randomState & 0xFF;
 }
 
+uint8_t norm(int8_t x){
+  return (x > 0)? x : -x;
+}
