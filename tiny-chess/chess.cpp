@@ -201,8 +201,8 @@ bool moves(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t t
     int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
     uint8_t startingRank = (theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) ? 6 : 1;
     if (fromRank == startingRank) {
-      // double move
-      if (toRank - fromRank == forwardOne * 2)
+      // double move? check the intervening square
+      if (!(theBoard[fromFile][fromRank + forwardOne] & MASK_PIECE_EXISTS) && toRank - fromRank == forwardOne * 2)
         return true;
     }
     return toRank - fromRank == forwardOne;
@@ -374,6 +374,7 @@ void doIt() {
 
         // piece up?
         if (joystickState & (1 << STICK_RU)) {
+          //FIXME prohibit when no legal moves?
           // not own piece (piece is black == turn counter is black)?
           if (!(board[cursorFile][cursorRank] & MASK_PIECE_EXISTS) || (((board[cursorFile][cursorRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE) != (turn & MASK_TURN_BLACK)))
             break;
