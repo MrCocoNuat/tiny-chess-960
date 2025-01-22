@@ -24,6 +24,7 @@ uint8_t kingRanks[2];
 
 enum SuperState {
   MAIN_MENU,
+  NEW_TURN,
   CONTEMPLATING,
   PIECE_IN_HAND,
   VIEWING_HISTORY,
@@ -47,7 +48,7 @@ enum PieceType {
 void fillInOpeningPositions(uint16_t seed) {
 
   // wipe the board
-  uint8_t* p = &board[0][0];
+  uint8_t *p = &board[0][0];
   for (uint8_t i = 0; i < 8 * 8; i++) {
     *p++ = EMPTY;
   }
@@ -64,11 +65,11 @@ void fillInOpeningPositions(uint16_t seed) {
   board[0][1] = PAWN;
   board[1][1] = PAWN;
   board[2][1] = PAWN;
-  board[3][4] = PAWN;
-  board[4][4] = PAWN;
-  board[5][4] = PAWN;
-  board[6][4] = PAWN;
-  board[7][4] = PAWN;
+  board[3][1] = PAWN;
+  board[4][1] = PAWN;
+  board[5][1] = PAWN;
+  board[6][1] = PAWN;
+  board[7][1] = PAWN;
   kingFiles[0] = 4;
   kingRanks[0] = 0;
 
@@ -83,11 +84,11 @@ void fillInOpeningPositions(uint16_t seed) {
   board[0][6] = PAWN | MASK_BLACK_ALLEGIANCE;
   board[1][6] = PAWN | MASK_BLACK_ALLEGIANCE;
   board[2][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  board[3][5] = PAWN | MASK_BLACK_ALLEGIANCE;
-  board[4][5] = PAWN | MASK_BLACK_ALLEGIANCE;
-  board[5][5] = PAWN | MASK_BLACK_ALLEGIANCE;
-  board[6][5] = PAWN | MASK_BLACK_ALLEGIANCE;
-  board[7][5] = PAWN | MASK_BLACK_ALLEGIANCE;
+  board[3][6] = PAWN | MASK_BLACK_ALLEGIANCE;
+  board[4][6] = PAWN | MASK_BLACK_ALLEGIANCE;
+  board[5][6] = PAWN | MASK_BLACK_ALLEGIANCE;
+  board[6][6] = PAWN | MASK_BLACK_ALLEGIANCE;
+  board[7][6] = PAWN | MASK_BLACK_ALLEGIANCE;
   kingFiles[1] = 4;
   kingRanks[1] = 7;
 }
@@ -108,7 +109,7 @@ void blitBoard() {
 }
 
 
-void fillPiece(uint8_t* square, PieceType pieceType) {
+void fillPiece(uint8_t *square, PieceType pieceType) {
 }
 
 #define cursorConstant 0x6
@@ -130,8 +131,7 @@ void blitCursor() {
 
 bool bishopAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
   if (
-    fromFile == toFile
-    || (toFile - fromFile != toRank - fromRank && toFile - fromFile != fromRank - toRank)) {
+    fromFile == toFile || (toFile - fromFile != toRank - fromRank && toFile - fromFile != fromRank - toRank)) {
     return false;
   }
 
@@ -145,8 +145,7 @@ bool bishopAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, u
 }
 
 bool rookAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
-  if ((toFile != fromFile && toRank != fromRank)
-      || (toFile == fromFile && toRank == fromRank)) {
+  if ((toFile != fromFile && toRank != fromRank) || (toFile == fromFile && toRank == fromRank)) {
     return false;
   }
 
@@ -172,17 +171,13 @@ bool attacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t
   if (pieceType == PAWN) {
     // for the pawn to go "forward", how does its rank change? 1 for white, -1 for black
     int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
-    return toRank - fromRank == forwardOne
-           && (fromFile - toFile == 1 || toFile - fromFile == 1);
+    return toRank - fromRank == forwardOne && (fromFile - toFile == 1 || toFile - fromFile == 1);
   }
   if (pieceType == KNIGHT) {
-    return (norm(toRank - fromRank) == 2 && norm(toFile - fromFile) == 1)
-           || (norm(toRank - fromRank) == 1 && norm(toFile - fromFile) == 2);
+    return (norm(toRank - fromRank) == 2 && norm(toFile - fromFile) == 1) || (norm(toRank - fromRank) == 1 && norm(toFile - fromFile) == 2);
   }
   if (pieceType == KING) {
-    return (toRank - fromRank || toFile - fromFile)
-           && (norm(toRank - fromRank) <= 1)
-           && (norm(toFile - fromFile) <= 1);
+    return (toRank - fromRank || toFile - fromFile) && (norm(toRank - fromRank) <= 1) && (norm(toFile - fromFile) <= 1);
   }
   if (pieceType == QUEEN) {
     return bishopAttacks(theBoard, fromFile, fromRank, toFile, toRank) || rookAttacks(theBoard, fromFile, fromRank, toFile, toRank);
@@ -200,13 +195,15 @@ bool moves(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t t
 
   uint8_t pieceType = theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS;
   if (pieceType == PAWN) {
-    if (fromFile != toFile) return false;
+    if (fromFile != toFile)
+      return false;
     // for the pawn to go "forward", how does its rank change? 1 for white, -1 for black
     int8_t forwardOne = 1 - 2 * ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE);
     uint8_t startingRank = (theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) ? 6 : 1;
     if (fromRank == startingRank) {
       // double move
-      if (toRank - fromRank == forwardOne * 2) return true;
+      if (toRank - fromRank == forwardOne * 2)
+        return true;
     }
     return toRank - fromRank == forwardOne;
   }
@@ -219,19 +216,22 @@ bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank)
   // needs to be a move or capture in the first place
   if (!(
         (moves(board, fromFile, fromRank, toFile, toRank) && !(board[toFile][toRank] & MASK_PIECE_EXISTS))
+        //FIXME: pawns can attack to an unoccupied square en passant
         || (attacks(board, fromFile, fromRank, toFile, toRank) && board[toFile][toRank] & MASK_PIECE_EXISTS && ((board[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (board[toFile][toRank] & MASK_BLACK_ALLEGIANCE))))) {
     return false;
   }
 
-  // FIXME doesn't work when the king moves
+  // is the king the one moving?
+  bool kingMove = (board[fromFile][fromRank] & MASK_PIECE_EXISTS) == KING;
+
   // legal move is one that does not have your own king under attack immediately afterwards
   // simulate the move
   uint8_t destinationContents = board[toFile][toRank];
   board[toFile][toRank] = board[fromFile][fromRank];
   board[fromFile][fromRank] = EMPTY;
   // check for opening own king to attack
-  uint8_t kingFile = kingFiles[turn & MASK_TURN_BLACK];
-  uint8_t kingRank = kingRanks[turn & MASK_TURN_BLACK];
+  uint8_t kingFile = kingMove ? toFile : kingFiles[turn & MASK_TURN_BLACK];
+  uint8_t kingRank = kingMove ? toRank : kingRanks[turn & MASK_TURN_BLACK];
 
   bool opensKing = false;
   for (uint8_t f = 0; !opensKing && f < 8; f++) {
@@ -251,13 +251,45 @@ bool isLegal(uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank)
   board[fromFile][fromRank] = board[toFile][toRank];
   board[toFile][toRank] = destinationContents;
 
-  if (opensKing == true) return false;
+  if (opensKing == true)
+    return false;
   return true;
 }
 
-bool anyLegal() {
-  bool anyLegalMoves = true;
-  return anyLegalMoves;
+bool inCheck() {
+  uint8_t kingFile = kingFiles[turn & MASK_TURN_BLACK];
+  uint8_t kingRank = kingRanks[turn & MASK_TURN_BLACK];
+  for (uint8_t f = 0; f < 8; f++) {
+    for (uint8_t r = 0; r < 8; r++) {
+      // only consider opponent piece
+      if (!(board[f][r] & MASK_PIECE_EXISTS && ((board[kingFile][kingRank] & MASK_BLACK_ALLEGIANCE) != (board[f][r] & MASK_BLACK_ALLEGIANCE))))
+        ;
+      if (attacks(board, f, r, kingFile, kingRank))
+        return true;
+    }
+  }
+  return false;
+}
+
+bool anyLegalMoves() {
+  // wahaahahahahahaha quad loops let's go!
+  // not that bad realistically, either there are many legal moves and this returns fast,
+  // or there are no legal moves, but very few pieces to iterate over
+  for (uint8_t fromF = 0; fromF < 8; fromF++) {
+    for (uint8_t fromR = 0; fromR < 8; fromR++) {
+      // only consider own piece
+      if (!(board[fromF][fromR] & MASK_PIECE_EXISTS) || (((board[fromF][fromR] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE) != (turn & MASK_TURN_BLACK)))
+        continue;
+      for (uint8_t toF = 0; toF < 8; toF++) {
+        for (uint8_t toR = 0; toR < 8; toR++) {
+          if (isLegal(fromF, fromR, toF, toR)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
 
 // prevent the same input from immediately repeating, like xrate
@@ -273,7 +305,8 @@ void doIt() {
     // handle animations
     // blit cursor according to timer
     blitCursor();
-    if (bannedRemainingTime) bannedRemainingTime--;
+    if (bannedRemainingTime)
+      bannedRemainingTime--;
 
     //fixme: need handleAnimations which runs before input banning
     if (superState == PIECE_IN_HAND) {
@@ -288,7 +321,6 @@ void doIt() {
       }
     }
 
-
     uint8_t joystickState = getJoystickState();
     // demand exactly 1 button is pressed!
     if ((!joystickState) || (joystickState & (joystickState - 1))) {
@@ -298,7 +330,8 @@ void doIt() {
     }
 
     // check that this input isn't banned
-    if (joystickState == bannedJoystickState && bannedRemainingTime) continue;
+    if (joystickState == bannedJoystickState && bannedRemainingTime)
+      continue;
     // and set the input repeat delays
     bannedJoystickState = joystickState;
     bannedRemainingTime = JOYSTICK_RATE;
@@ -308,6 +341,16 @@ void doIt() {
     }
 
     switch (superState) {
+      case NEW_TURN:
+        turn++;
+        // mate?
+        if (!anyLegalMoves()) {
+          superState = GAME_OVER;
+          break;
+        }
+        superState = CONTEMPLATING;
+        break;
+
       case CONTEMPLATING:
 
         // movement?
@@ -332,8 +375,8 @@ void doIt() {
         // piece up?
         if (joystickState & (1 << STICK_RU)) {
           // not own piece (piece is black == turn counter is black)?
-          if (!(board[cursorFile][cursorRank] & MASK_PIECE_EXISTS)
-              || (((board[cursorFile][cursorRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE) != (turn & MASK_TURN_BLACK))) break;
+          if (!(board[cursorFile][cursorRank] & MASK_PIECE_EXISTS) || (((board[cursorFile][cursorRank] & MASK_BLACK_ALLEGIANCE) >> BIT_BLACK_ALLEGIANCE) != (turn & MASK_TURN_BLACK)))
+            break;
           superState = PIECE_IN_HAND;
           handFile = cursorFile;
           handRank = cursorRank;
@@ -375,10 +418,16 @@ void doIt() {
           }
           // put piece down anew to make a move;
           if (isLegal(handFile, handRank, cursorFile, cursorRank)) {
+            bool kingMove = (board[handFile][handRank] & MASK_PIECE_EXISTS) == KING;
+            if (kingMove) {
+              kingFiles[turn & MASK_TURN_BLACK] = cursorFile;
+              kingRanks[turn & MASK_TURN_BLACK] = cursorRank;
+            }
+
             board[cursorFile][cursorRank] = board[handFile][handRank];  // FIXME need to clear special flags! in a movePiece function
             board[handFile][handRank] = EMPTY;
-            turn++;
-            superState = CONTEMPLATING;
+
+            superState = NEW_TURN;
             blitBoard();
             break;
           }
@@ -388,19 +437,15 @@ void doIt() {
 
         break;
       case VIEWING_HISTORY:
-      case GAME_OVER:
         break;
+      case GAME_OVER:
+        blitBoard();
+        if (inCheck()) {
+          plotChar('C', 70, 0);
+        } else {
+          plotChar('S', 70, 0);
+        }
+        return;  // TEMP: obviously don't just return from this then main...
     }
   }
-}
-
-
-void move(uint8_t from, uint8_t to) {
-  // there's no validation of legality here
-  uint8_t fromF = from >> 5, fromR = (from >> 2) & 0b111;
-  uint8_t toF = to >> 5, toR = (to >> 2) & 0b111;
-
-  // move the piece, leaving an empty
-  board[toF][toR] = board[fromF][fromR];
-  board[fromF][fromR] = EMPTY;
 }
