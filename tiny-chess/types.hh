@@ -3,8 +3,20 @@
 // many bitfield structs will be specified here but never actually used in code, instead just their backing ints will
 // as conversions to ints are not automatic and there is no space to provide them otherwise
 
+enum PieceType {
+    EMPTY = 0,
+    // walkers
+    PAWN = 0b001,
+    KNIGHT = 0b010,
+    KING = 0b011,
+    // sliders
+    BISHOP = 0b100,
+    ROOK = 0b101,
+    QUEEN = 0b110
+};
+
 enum Tile : uint8_t {
-    EMPTY,
+    TILE_EMPTY,
     WHITE_KING,
     WHITE_QUEEN,
     WHITE_BISHOP,
@@ -32,3 +44,4 @@ enum Promotion : uint8_t {
     PROMOTE_BISHOP,
     PROMOTE_KNIGHT,
 };
+
