@@ -10,6 +10,11 @@ const uint8_t MASK_NEVER_MOVED = 1 << 4;        // for castling
 const uint8_t BIT_BLACK_ALLEGIANCE = 3;
 const uint8_t MASK_BLACK_ALLEGIANCE = 1 << 3;
 const uint8_t MASK_PIECE_EXISTS = 0x7;
+// when just passing a turn, these are preserved;
+const uint8_t MASK_LONG_LIVED = MASK_PIECE_EXISTS | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+// when moving a piece, these are always preserved
+const uint8_t MASK_PERMANENT = MASK_PIECE_EXISTS | MASK_BLACK_ALLEGIANCE;
+
 
 // store for check calculations
 uint8_t kingFiles[2];
@@ -25,41 +30,41 @@ void initializeBoard(uint8_t theBoard[8][8], uint16_t seed) {
   }
 
   // start with standard position for now
-  theBoard[0][0] = ROOK;
-  theBoard[1][0] = KNIGHT;
-  theBoard[2][0] = BISHOP;
-  theBoard[3][0] = QUEEN;
-  theBoard[4][0] = KING;
-  theBoard[5][0] = BISHOP;
-  theBoard[6][0] = KNIGHT;
-  theBoard[7][0] = ROOK;
-  theBoard[0][1] = PAWN;
-  theBoard[1][1] = PAWN;
-  theBoard[2][1] = PAWN;
-  theBoard[3][1] = PAWN;
-  theBoard[4][1] = PAWN;
-  theBoard[5][1] = PAWN;
-  theBoard[6][1] = PAWN;
-  theBoard[7][1] = PAWN;
+  theBoard[0][0] = ROOK | MASK_NEVER_MOVED;
+  theBoard[1][0] = KNIGHT | MASK_NEVER_MOVED;
+  theBoard[2][0] = BISHOP | MASK_NEVER_MOVED;
+  theBoard[3][0] = QUEEN | MASK_NEVER_MOVED;
+  theBoard[4][0] = KING | MASK_NEVER_MOVED;
+  theBoard[5][0] = BISHOP | MASK_NEVER_MOVED;
+  theBoard[6][0] = KNIGHT | MASK_NEVER_MOVED;
+  theBoard[7][0] = ROOK | MASK_NEVER_MOVED;
+  theBoard[0][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[1][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[2][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[3][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[4][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[5][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[6][1] = PAWN | MASK_NEVER_MOVED;
+  theBoard[7][1] = PAWN | MASK_NEVER_MOVED;
   kingFiles[0] = 4;
   kingRanks[0] = 0;
 
-  theBoard[0][7] = ROOK | MASK_BLACK_ALLEGIANCE;
-  theBoard[1][7] = KNIGHT | MASK_BLACK_ALLEGIANCE;
-  theBoard[2][7] = BISHOP | MASK_BLACK_ALLEGIANCE;
-  theBoard[3][7] = QUEEN | MASK_BLACK_ALLEGIANCE;
-  theBoard[4][7] = KING | MASK_BLACK_ALLEGIANCE;
-  theBoard[5][7] = BISHOP | MASK_BLACK_ALLEGIANCE;
-  theBoard[6][7] = KNIGHT | MASK_BLACK_ALLEGIANCE;
-  theBoard[7][7] = ROOK | MASK_BLACK_ALLEGIANCE;
-  theBoard[0][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[1][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[2][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[3][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[4][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[5][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[6][6] = PAWN | MASK_BLACK_ALLEGIANCE;
-  theBoard[7][6] = PAWN | MASK_BLACK_ALLEGIANCE;
+  theBoard[0][7] = ROOK | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[1][7] = KNIGHT | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[2][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[3][7] = QUEEN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[4][7] = KING | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[5][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[6][7] = KNIGHT | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[7][7] = ROOK | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[0][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[1][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[2][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[3][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[4][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[5][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[6][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[7][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   kingFiles[1] = 4;
   kingRanks[1] = 7;
 }
@@ -229,4 +234,31 @@ bool anyLegalMoves(uint8_t turn, uint8_t theBoard[8][8]) {
     }
   }
   return false;
+}
+
+uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank){
+  // move the piece,
+  bool kingMove = (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == KING;
+  if (kingMove) {
+    kingFiles[turn & MASK_TURN_BLACK] = toFile;
+    kingRanks[turn & MASK_TURN_BLACK] = toRank;
+  }
+  // clearing any special flags,
+  theBoard[toFile][toRank] = theBoard[fromFile][fromRank] & MASK_PERMANENT;
+  uint8_t capturedPiece = theBoard[fromFile][fromRank];
+  theBoard[fromFile][fromRank] = EMPTY;
+
+  // clear short-lived flags from the board on every move // TEMP: break out?
+  for (uint8_t f = 0; f < 8; f++){
+    for (uint8_t r = 0; r < 8; r++){
+      theBoard[f][r] &= MASK_LONG_LIVED;
+    }
+  }
+  // but make sure to set any ones that are needed anew
+
+  // pawn double move?
+  if ((theBoard[toFile][toRank] & MASK_PIECE_EXISTS) == PAWN && (toRank - fromRank == 2 || fromRank - toRank == 2)){
+    theBoard[toFile][toRank] |= MASK_JUST_DOUBLE_MOVED;
+  }
+  return capturedPiece;
 }

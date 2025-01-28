@@ -75,10 +75,13 @@ enum SuperState {
 };
 SuperState superState = CONTEMPLATING;
 
+void initialize(uint16_t seed){
+  initializeBoard(board, seed); //temp: allow resuming the game
+}
+
 
 void doIt() {
 
-  initializeBoard(board, 0); //temp: allow resuming the game
   blitBoard();
 
   for (;;) {
@@ -211,14 +214,7 @@ void doIt() {
 
           // put piece down anew to make a move;
           if (isLegal(turn, board, handFile, handRank, cursorFile, cursorRank)) {
-            bool kingMove = (board[handFile][handRank] & MASK_PIECE_EXISTS) == KING;
-            if (kingMove) {
-              kingFiles[turn & MASK_TURN_BLACK] = cursorFile;
-              kingRanks[turn & MASK_TURN_BLACK] = cursorRank;
-            }
-
-            board[cursorFile][cursorRank] = board[handFile][handRank];  // FIXME need to clear special flags! in a movePiece function
-            board[handFile][handRank] = EMPTY;
+            makeMove(turn, board, handFile, handRank, cursorFile, cursorRank);
 
             superState = NEW_TURN;
             blitBoard();

@@ -10,8 +10,7 @@ void setup(){
   setupBoard();
   setupDisplay();
 
-  //fillInOpeningPositions(0);
-  //blitBoard();
+  initialize(0);
   doIt();
 }
 
