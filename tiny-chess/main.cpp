@@ -164,7 +164,7 @@ void doIt() {
           superState = PIECE_IN_HAND;
           handFile = cursorFile;
           handRank = cursorRank;
-          blitLegalMoves();
+          blitLegalMoves(); // FIXME optimize to return num legal moves duh
         }
 
         // history?

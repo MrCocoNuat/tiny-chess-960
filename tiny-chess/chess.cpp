@@ -51,7 +51,7 @@ void initializeBoard(uint8_t theBoard[8][8], uint16_t seed) {
 
   theBoard[0][7] = ROOK | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[1][7] = KNIGHT | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[2][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[2][2] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[3][7] = QUEEN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[4][7] = KING | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[5][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
@@ -160,8 +160,10 @@ bool isLegal(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fro
   // needs to be a move or capture in the first place
   if (!(
         (moves(theBoard, fromFile, fromRank, toFile, toRank) && !(theBoard[toFile][toRank] & MASK_PIECE_EXISTS))
-        //FIXME: pawns can attack to an unoccupied square en passant
-        || (attacks(theBoard, fromFile, fromRank, toFile, toRank) && theBoard[toFile][toRank] & MASK_PIECE_EXISTS && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][toRank] & MASK_BLACK_ALLEGIANCE))))) {
+        || (attacks(theBoard, fromFile, fromRank, toFile, toRank) && theBoard[toFile][toRank] & MASK_PIECE_EXISTS && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][toRank] & MASK_BLACK_ALLEGIANCE)))
+        // pawns can capture en passant another pawn on the same rank that just double-moved
+        || (attacks(theBoard, fromFile, fromRank, toFile, toRank) && theBoard[toFile][fromRank] & MASK_JUST_DOUBLE_MOVED && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][fromRank] & MASK_BLACK_ALLEGIANCE)))
+        )) {
     return false;
   }
 
@@ -243,10 +245,16 @@ uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t
     kingFiles[turn & MASK_TURN_BLACK] = toFile;
     kingRanks[turn & MASK_TURN_BLACK] = toRank;
   }
-  // clearing any special flags,
+  // is this an en passant capture?
+  uint8_t enPassantCapture = ((theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == PAWN && theBoard[toFile][fromRank] & MASK_JUST_DOUBLE_MOVED);
+  // remember the captured piece,
+  uint8_t capturedPiece = enPassantCapture? theBoard[toFile][fromRank] : theBoard[toFile][toRank];
+  // capture, clearing any special flags,
   theBoard[toFile][toRank] = theBoard[fromFile][fromRank] & MASK_PERMANENT;
-  uint8_t capturedPiece = theBoard[fromFile][fromRank];
+  // and clear the origin square
   theBoard[fromFile][fromRank] = EMPTY;
+  // damn en passant
+  theBoard[toFile][fromRank] &= enPassantCapture? 0 : 0xFF;
 
   // clear short-lived flags from the board on every move // TEMP: break out?
   for (uint8_t f = 0; f < 8; f++){
