@@ -57,7 +57,7 @@ void blitBoard() {
 void blitLegalMoves(){
   for (uint8_t f = 0; f < 8; f++) {
     for (uint8_t r = 0; r < 8; r++) {
-      if (isLegal(turn, board, handFile, handRank, f, r)) {
+      if (kindOfLegalMove(turn, board, handFile, handRank, f, r)) {
         moveTo(f << 3, r << 3);
         plotSprite(7);
       }
@@ -154,7 +154,7 @@ void doIt() {
           bool canMove = false;
           for(uint8_t f = 0; !canMove && f < 8; f++){
             for(uint8_t r = 0; !canMove && r < 8; r++){
-              if (isLegal(turn, board, cursorFile, cursorRank, f, r)){
+              if (kindOfLegalMove(turn, board, cursorFile, cursorRank, f, r)){
                 canMove = true;
               }
             }
@@ -213,8 +213,13 @@ void doIt() {
           }
 
           // put piece down anew to make a move;
-          if (isLegal(turn, board, handFile, handRank, cursorFile, cursorRank)) {
-            makeMove(turn, board, handFile, handRank, cursorFile, cursorRank);
+          uint8_t legalMove = kindOfLegalMove(turn, board, handFile, handRank, cursorFile, cursorRank);
+          if (legalMove) {
+            if (legalMove == CASTLE_KINGSIDE || legalMove == CASTLE_QUEENSIDE){
+              makeCastle(turn, board, handFile, cursorFile, handRank, legalMove);
+            } else {
+              makeMove(turn, board, handFile, handRank, cursorFile, cursorRank);
+            }
 
             superState = NEW_TURN;
             blitBoard();
@@ -238,3 +243,5 @@ void doIt() {
     }
   }
 }
+
+//RESUME: kindOfLegalCastle is not showing castling as legal

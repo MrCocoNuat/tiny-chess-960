@@ -31,10 +31,11 @@ enum Tile : uint8_t {
     BLACK_PAWN,
 };
 
-enum Castle : uint8_t {
-    CASTLE_NONE,
-    CASTLE_KINGSIDE,
-    CASTLE_QUEENSIDE,
+// dual purpose, returned by kindOfLegalCastle and saved to eeprom as moves
+enum LegalCastle : uint8_t {
+    CASTLE_ILLEGAL = 0,
+    CASTLE_KINGSIDE = 0xF0, // TEMP: these need to be invalid move ids for eeprom
+    CASTLE_QUEENSIDE = 0xF1,
 };
 
 // being mandatory, there is no "NONE"

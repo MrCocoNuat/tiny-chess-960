@@ -1,6 +1,7 @@
 #include "math.hh"
 #include "chess.hh"
 #include <Arduino.h>
+#include "sh1106.hh"
 #include "types.hh"
 
 const uint8_t MASK_TURN_BLACK = 1;
@@ -15,6 +16,12 @@ const uint8_t MASK_LONG_LIVED = MASK_PIECE_EXISTS | MASK_BLACK_ALLEGIANCE | MASK
 // when moving a piece, these are always preserved
 const uint8_t MASK_PERMANENT = MASK_PIECE_EXISTS | MASK_BLACK_ALLEGIANCE;
 
+// for castling:
+// although the names don't really match, the king and queen can be anywhere relative to each other
+const uint8_t CASTLE_KINGSIDE_KING_FILE = 6;
+const uint8_t CASTLE_KINGSIDE_ROOK_FILE = 5;
+const uint8_t CASTLE_QUEENSIDE_KING_FILE = 2;
+const uint8_t CASTLE_QUEENSIDE_ROOK_FILE = 3;
 
 // store for check calculations
 uint8_t kingFiles[2];
@@ -69,8 +76,7 @@ void initializeBoard(uint8_t theBoard[8][8], uint16_t seed) {
   kingRanks[1] = 7;
 }
 
-void fillPiece(uint8_t *square, PieceType pieceType) {
-}
+
 
 
 bool bishopAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
@@ -155,17 +161,80 @@ bool moves(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t t
   return attacks(theBoard, fromFile, fromRank, toFile, toRank);
 }
 
-// pre-supposes that from actually has a piece on it
-bool isLegal(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
-  // needs to be a move or capture in the first place
-  if (!(
-        (moves(theBoard, fromFile, fromRank, toFile, toRank) && !(theBoard[toFile][toRank] & MASK_PIECE_EXISTS))
-        || (attacks(theBoard, fromFile, fromRank, toFile, toRank) && theBoard[toFile][toRank] & MASK_PIECE_EXISTS && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][toRank] & MASK_BLACK_ALLEGIANCE)))
-        // pawns can capture en passant another pawn on the same rank that just double-moved
-        || (attacks(theBoard, fromFile, fromRank, toFile, toRank) && theBoard[toFile][fromRank] & MASK_JUST_DOUBLE_MOVED && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][fromRank] & MASK_BLACK_ALLEGIANCE)))
-        )) {
-    return false;
+
+/*
+const uint8_t CASTLE_KINGSIDE_KING_FILE = 6;
+const uint8_t CASTLE_KINGSIDE_ROOK_FILE = 5;
+const uint8_t CASTLE_QUEENSIDE_KING_FILE = 2;
+const uint8_t CASTLE_QUEENSIDE_ROOK_FILE = 3;
+ */
+
+// pre-supposes both pieces have never moved, and are actually a king and rook - check before calling this expensive function!
+uint8_t kindOfLegalCastle(uint8_t turn, uint8_t theBoard[8][8], uint8_t kingFile, uint8_t rookFile, uint8_t rank) {
+
+  bool isCastlingKingside = rookFile > kingFile;
+  uint8_t kingToFile = isCastlingKingside ? CASTLE_KINGSIDE_KING_FILE : CASTLE_QUEENSIDE_KING_FILE;
+  uint8_t rookToFile = isCastlingKingside ? CASTLE_KINGSIDE_ROOK_FILE : CASTLE_QUEENSIDE_ROOK_FILE;
+
+  // there is no requirement that the king and rook move in opposite directions,
+  // or even in any particular directions... so these must be calculated
+  int8_t kingDirection = (kingToFile > kingFile) ? 1 : -1;
+
+  // king's path isn't clear: any square being attacked is no good!
+  for (uint8_t kingPassingFile = kingFile; kingPassingFile != kingToFile + kingDirection; kingPassingFile += kingDirection) {
+    // intervening? must be empty square
+
+    if (kingPassingFile != kingFile && kingPassingFile != rookFile && theBoard[kingPassingFile][rank] & MASK_PIECE_EXISTS)
+      return false;
+    // and a not attacked square
+    // no need to lift up the king or rook for this, if either is pinned by an attack it is coming from the home rank anyway, so...
+    // the king is either already in check (king... pin?) or will be (rook pin)
+    for (uint8_t f = 0; f < 8; f++) {
+      for (uint8_t r = 0; r < 8; r++) {
+        // only consider opponent piece
+        if (!(theBoard[f][r] & MASK_PIECE_EXISTS && ((theBoard[kingFile][rank] & MASK_BLACK_ALLEGIANCE) != (theBoard[f][r] & MASK_BLACK_ALLEGIANCE))))
+          continue;
+        if (attacks(theBoard, f, r, kingPassingFile, rank))
+          return false;
+      }
+    }
   }
+
+  // rook's path isn't clear
+  int8_t rookDirection = (rookToFile > rookFile) ? 1 : -1;
+  for (uint8_t rookPassingFile = rookFile; rookPassingFile != rookToFile + rookDirection; rookPassingFile += rookDirection) {
+    // intervening? must be empty square
+    if (rookPassingFile != rookFile && rookPassingFile != kingFile && theBoard[rookPassingFile][rank] & MASK_PIECE_EXISTS)
+      return false;
+  }
+
+
+  return isCastlingKingside? CASTLE_KINGSIDE : CASTLE_QUEENSIDE;
+}
+
+// pre-supposes that from actually has a piece on it
+uint8_t kindOfLegalMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
+  // needs to be a move or capture in the first place
+  // kindOfLegalMove is called a lot and moves/attacks calls are real expensive, short circuit when possible
+  bool isMove = !(theBoard[toFile][toRank] & MASK_PIECE_EXISTS)
+                && moves(theBoard, fromFile, fromRank, toFile, toRank);
+  bool isAttack = theBoard[toFile][toRank] & MASK_PIECE_EXISTS
+                  && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][toRank] & MASK_BLACK_ALLEGIANCE))
+                  && attacks(theBoard, fromFile, fromRank, toFile, toRank);
+  bool isEnPassant = (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == PAWN
+                     && theBoard[toFile][fromRank] & MASK_JUST_DOUBLE_MOVED
+                     && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][fromRank] & MASK_BLACK_ALLEGIANCE))
+                     && attacks(theBoard, fromFile, fromRank, toFile, toRank);
+  bool isPotentialCastle = (fromRank == toRank)
+                  && (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == KING
+                  && (theBoard[toFile][toRank] & MASK_PIECE_EXISTS) == ROOK
+                  && theBoard[fromFile][fromRank] & MASK_NEVER_MOVED
+                  && theBoard[toFile][toRank] & MASK_NEVER_MOVED
+                  && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) == (theBoard[toFile][fromRank] & MASK_BLACK_ALLEGIANCE));
+  // castling has to handle its own check logic, it is too different from the rest, so it can return authoritative true
+  if (isPotentialCastle) return kindOfLegalCastle(turn, theBoard, fromFile, toFile, fromRank);
+
+  if (!isMove && !isAttack && !isEnPassant) return false;
 
   // is the king the one moving?
   bool kingMove = (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == KING;
@@ -209,7 +278,7 @@ bool inCheck(uint8_t turn, uint8_t theBoard[8][8]) {
     for (uint8_t r = 0; r < 8; r++) {
       // only consider opponent piece
       if (!(theBoard[f][r] & MASK_PIECE_EXISTS && ((theBoard[kingFile][kingRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[f][r] & MASK_BLACK_ALLEGIANCE))))
-        ;
+        continue;
       if (attacks(theBoard, f, r, kingFile, kingRank))
         return true;
     }
@@ -228,7 +297,7 @@ bool anyLegalMoves(uint8_t turn, uint8_t theBoard[8][8]) {
         continue;
       for (uint8_t toF = 0; toF < 8; toF++) {
         for (uint8_t toR = 0; toR < 8; toR++) {
-          if (isLegal(turn, theBoard, fromF, fromR, toF, toR)) {
+          if (kindOfLegalMove(turn, theBoard, fromF, fromR, toF, toR)) {
             return true;
           }
         }
@@ -238,7 +307,7 @@ bool anyLegalMoves(uint8_t turn, uint8_t theBoard[8][8]) {
   return false;
 }
 
-uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank){
+uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {
   // move the piece,
   bool kingMove = (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == KING;
   if (kingMove) {
@@ -248,25 +317,32 @@ uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t
   // is this an en passant capture?
   uint8_t enPassantCapture = ((theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == PAWN && theBoard[toFile][fromRank] & MASK_JUST_DOUBLE_MOVED);
   // remember the captured piece,
-  uint8_t capturedPiece = enPassantCapture? theBoard[toFile][fromRank] : theBoard[toFile][toRank];
+  uint8_t capturedPiece = enPassantCapture ? theBoard[toFile][fromRank] : theBoard[toFile][toRank];
   // capture, clearing any special flags,
   theBoard[toFile][toRank] = theBoard[fromFile][fromRank] & MASK_PERMANENT;
   // and clear the origin square
   theBoard[fromFile][fromRank] = EMPTY;
   // damn en passant
-  theBoard[toFile][fromRank] &= enPassantCapture? 0 : 0xFF;
+  theBoard[toFile][fromRank] &= enPassantCapture ? 0 : 0xFF;
 
   // clear short-lived flags from the board on every move // TEMP: break out?
-  for (uint8_t f = 0; f < 8; f++){
-    for (uint8_t r = 0; r < 8; r++){
+  for (uint8_t f = 0; f < 8; f++) {
+    for (uint8_t r = 0; r < 8; r++) {
       theBoard[f][r] &= MASK_LONG_LIVED;
     }
   }
   // but make sure to set any ones that are needed anew
 
   // pawn double move?
-  if ((theBoard[toFile][toRank] & MASK_PIECE_EXISTS) == PAWN && (toRank - fromRank == 2 || fromRank - toRank == 2)){
+  if ((theBoard[toFile][toRank] & MASK_PIECE_EXISTS) == PAWN && (toRank - fromRank == 2 || fromRank - toRank == 2)) {
     theBoard[toFile][toRank] |= MASK_JUST_DOUBLE_MOVED;
   }
   return capturedPiece;
+}
+
+void makeCastle(uint8_t turn, uint8_t theBoard[8][8], uint8_t kingFile, uint8_t rookFile, uint8_t rank, uint8_t legalCastleKind){
+  uint8_t kingToFile = legalCastleKind == CASTLE_KINGSIDE ? CASTLE_KINGSIDE_KING_FILE : CASTLE_QUEENSIDE_KING_FILE;
+  uint8_t rookToFile = legalCastleKind == CASTLE_KINGSIDE ? CASTLE_KINGSIDE_ROOK_FILE : CASTLE_QUEENSIDE_ROOK_FILE;
+  makeMove(turn, theBoard, kingFile, rank, kingToFile, rank);
+  makeMove(turn, theBoard, rookFile, rank, rookToFile, rank);
 }
