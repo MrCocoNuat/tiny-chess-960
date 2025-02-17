@@ -3,12 +3,12 @@
 #include <EEPROM.h>
 #include "types.hh"
 
-void putInAddress0(uint8_t something){
-  EEPROM.update(0, something); // don't mess up address 0 too much for testing. 
+// there are 512B, or 256 blocks of eeprom at 2B each
+void put(uint8_t address, uint16_t content){
+  EEPROM.update(address << 1, content >> 8);
+  EEPROM.update((address << 1) + 1, content & 0xFF);
 }
 
-uint8_t getFromAddress0(){
-  uint8_t value;
-  EEPROM.get(0, value);
-  return value;
+uint16_t get(uint8_t address){
+  return (EEPROM.read(address << 1) << 8) | EEPROM.read((address << 1) + 1);
 }
