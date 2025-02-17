@@ -11,9 +11,11 @@ void setup(){
   setupBoard();
   setupDisplay();
 
-  doMenu();
-  //initialize(0);
-  //doIt();
+  uint16_t gameSeed = doMenu() & ~(FLAG_NEW_GAME_SEED);
+  clearDisplay();
+
+  initialize(gameSeed);
+  doIt();
 }
 
 void loop() {}

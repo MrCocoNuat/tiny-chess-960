@@ -36,15 +36,71 @@ void initializeBoard(uint8_t theBoard[8][8], uint16_t seed) {
     *p++ = EMPTY;
   }
 
-  // start with standard position for now
-  theBoard[0][0] = ROOK | MASK_NEVER_MOVED;
-  theBoard[1][0] = KNIGHT | MASK_NEVER_MOVED;
-  theBoard[2][0] = BISHOP | MASK_NEVER_MOVED;
-  theBoard[3][0] = QUEEN | MASK_NEVER_MOVED;
-  theBoard[4][0] = KING | MASK_NEVER_MOVED;
-  theBoard[5][0] = BISHOP | MASK_NEVER_MOVED;
-  theBoard[6][0] = KNIGHT | MASK_NEVER_MOVED;
-  theBoard[7][0] = ROOK | MASK_NEVER_MOVED;
+  uint16_t seedRemnant = seed;
+  // derive the initial board state from the seed:
+  // bishops start on opposite colors
+  uint8_t bishopFile1 = ((seedRemnant % 4) << 1) + 1;
+  seedRemnant /= 4;
+  uint8_t bishopFile2 = (seedRemnant % 4) << 1;
+  seedRemnant /= 4;
+
+  theBoard[bishopFile1][0] = BISHOP | MASK_NEVER_MOVED;
+  theBoard[bishopFile1][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+  theBoard[bishopFile2][0] = BISHOP | MASK_NEVER_MOVED;
+  theBoard[bishopFile2][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+
+  // queen is somewhere in the 6 remaining files
+  uint8_t queenPosition = seedRemnant % 6;
+  seedRemnant /= 6;
+  for(uint8_t queenFile = 0; queenFile < 8;  queenFile++){
+    if (theBoard[queenFile][0] == EMPTY){
+      if (queenPosition == 0){
+        theBoard[queenFile][0] = QUEEN | MASK_NEVER_MOVED;
+        theBoard[queenFile][7] = QUEEN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+      }
+      queenPosition--;
+    }
+  }
+
+  // place knights in the 5 remaining files
+  uint8_t knightPosition1 = 0, knightPosition2 = 1;
+  for(; seedRemnant > 0; seedRemnant--){
+    knightPosition2++;
+    if (knightPosition2 > 4){
+      knightPosition1++;
+      knightPosition2 = knightPosition1 + 1;
+    }
+  }
+
+  for(uint8_t knightFile = 0, knightPosition = 0; knightFile < 8; knightFile++){
+    if (theBoard[knightFile][0] == EMPTY){
+      if (knightPosition == knightPosition1 || knightPosition == knightPosition2){
+        theBoard[knightFile][0] = KNIGHT | MASK_NEVER_MOVED;
+        theBoard[knightFile][7] = KNIGHT | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+      }
+      knightPosition++;
+    }
+  }
+
+  // king goes between the rooks
+  for(uint8_t file = 0, remainingPosition = 0; file < 8; file++){
+    if (theBoard[file][0] == EMPTY){
+      if (remainingPosition == 1){
+        theBoard[file][0] = KING | MASK_NEVER_MOVED; //TODO: sometimes castling disappears the king? check right-side in 000
+        theBoard[file][7] = KING | MASK_BLACK_ALLEGIANCE| MASK_NEVER_MOVED;
+        kingFiles[0] = file;
+        kingFiles[1] = file;
+        kingRanks[0] = 0;
+        kingRanks[1] = 7;
+      } else {
+        theBoard[file][0] = ROOK | MASK_NEVER_MOVED;
+        theBoard[file][7] = ROOK | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
+      }
+      remainingPosition++;
+    }
+  }
+
+  // then all the pawns
   theBoard[0][1] = PAWN | MASK_NEVER_MOVED;
   theBoard[1][1] = PAWN | MASK_NEVER_MOVED;
   theBoard[2][1] = PAWN | MASK_NEVER_MOVED;
@@ -53,17 +109,7 @@ void initializeBoard(uint8_t theBoard[8][8], uint16_t seed) {
   theBoard[5][1] = PAWN | MASK_NEVER_MOVED;
   theBoard[6][1] = PAWN | MASK_NEVER_MOVED;
   theBoard[7][1] = PAWN | MASK_NEVER_MOVED;
-  kingFiles[0] = 4;
-  kingRanks[0] = 0;
 
-  theBoard[0][7] = ROOK | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[1][7] = KNIGHT | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[2][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[3][7] = QUEEN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[4][7] = KING | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[5][7] = BISHOP | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[6][7] = KNIGHT | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  theBoard[7][7] = ROOK | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[0][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[1][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[2][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
@@ -72,11 +118,7 @@ void initializeBoard(uint8_t theBoard[8][8], uint16_t seed) {
   theBoard[5][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[6][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
   theBoard[7][6] = PAWN | MASK_BLACK_ALLEGIANCE | MASK_NEVER_MOVED;
-  kingFiles[1] = 4;
-  kingRanks[1] = 7;
 }
-
-
 
 
 bool bishopAttacks(uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank) {

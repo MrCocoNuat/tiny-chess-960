@@ -7,7 +7,7 @@
 #define SEED_MAX 960
 #define SEED_STANDARD_FIDE_ARMY 518
 
-const uint16_t FLAG_NEW_GAME_SEED = 0xF000;
+const uint16_t FLAG_NEW_GAME_SEED = 0x0000; //TODO: this is not playing nicely when combined with game seed. So use it only for continues
 
 // menu choices:
 // 0 continue
@@ -37,7 +37,7 @@ uint16_t doMenu(){
     moveTo(6, 7 << 3);
     plotText(PSTR("== TINY CHESS960 =="));
     moveTo(24, 5 << 3);
-    plotText(PSTR("CONTINUE"));
+    plotText(PSTR("CONTINUE NOTYET"));
     moveTo(24, 4 << 3);
     plotText(PSTR("NEW GAME:"));
     moveTo(36, 3 << 3);
@@ -55,7 +55,7 @@ uint16_t doMenu(){
       if (currentEditingDigit >= 0){
         plotChar('^', 90 + currentEditingDigit * 6, 0);
       }
-      //randomByte = nextByte();
+      randomByte = nextByte();
 
       if (bannedRemainingTime2)
         bannedRemainingTime2--;
@@ -80,16 +80,17 @@ uint16_t doMenu(){
       }
 
       if (joystickState & (1 << STICK_RR)){
-        plotChar('A',0,0);
           switch(currentMenuChoice){
             case 0: // continue
-              return 0;
+             // return 0; //TODO: persistence not yet supported
+              continue;
             case 1: // standard game
               return FLAG_NEW_GAME_SEED | SEED_STANDARD_FIDE_ARMY;
-          case 2: // random game
+            case 2: // random game
               return FLAG_NEW_GAME_SEED | ((randomByte << 8 | nextByte()) % SEED_MAX);
-              case 3: // set seed game
-                  return FLAG_NEW_GAME_SEED | (currentNewGameSeed[0] * 100 + currentNewGameSeed[1] * 10 + currentNewGameSeed[2]);
+            case 3: // set seed game
+              uint16_t seed = currentNewGameSeed[0] * 100 + currentNewGameSeed[1] * 10 + currentNewGameSeed[2];
+              return FLAG_NEW_GAME_SEED | seed;
           }
       }
 
