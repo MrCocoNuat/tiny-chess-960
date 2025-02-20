@@ -362,8 +362,10 @@ uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t
   uint8_t capturedPiece = enPassantCapture ? theBoard[toFile][fromRank] : theBoard[toFile][toRank];
   // capture, clearing any special flags,
   theBoard[toFile][toRank] = theBoard[fromFile][fromRank] & MASK_PERMANENT;
-  // and clear the origin square
-  theBoard[fromFile][fromRank] = EMPTY;
+  // and clear the origin square - IF it is not the same as the destination, as could be in the case of castling in chess960
+  if (toFile != fromFile || toRank != fromRank){
+    theBoard[fromFile][fromRank] = EMPTY;
+  }
   // damn en passant
   theBoard[toFile][fromRank] &= enPassantCapture ? 0 : 0xFF;
 
