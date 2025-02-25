@@ -6,6 +6,7 @@
 
 const uint8_t MASK_TURN_BLACK = 1;
 
+// bits 6 and 7 reserved for now
 const uint8_t MASK_JUST_DOUBLE_MOVED = 1 << 5;  // for en-passant
 const uint8_t MASK_NEVER_MOVED = 1 << 4;        // for castling
 const uint8_t BIT_BLACK_ALLEGIANCE = 3;
@@ -267,6 +268,9 @@ uint8_t kindOfLegalMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, 
                      && theBoard[toFile][fromRank] & MASK_JUST_DOUBLE_MOVED
                      && ((theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE) != (theBoard[toFile][fromRank] & MASK_BLACK_ALLEGIANCE))
                      && attacks(theBoard, fromFile, fromRank, toFile, toRank);
+  bool isPromotion = (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == PAWN
+                     && ((toRank == 7 && !(theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE))
+                         || (toRank == 0 && theBoard[fromFile][fromRank] & MASK_BLACK_ALLEGIANCE));
   bool isPotentialCastle = (fromRank == toRank)
                   && (theBoard[fromFile][fromRank] & MASK_PIECE_EXISTS) == KING
                   && (theBoard[toFile][toRank] & MASK_PIECE_EXISTS) == ROOK
@@ -308,8 +312,11 @@ uint8_t kindOfLegalMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, 
   theBoard[fromFile][fromRank] = theBoard[toFile][toRank];
   theBoard[toFile][toRank] = destinationContents;
 
-  if (opensKing == true)
+  if (opensKing)
     return false;
+  if (isPromotion){
+    return PROMOTION;
+  }
   return true;
 }
 
@@ -389,4 +396,8 @@ void makeCastle(uint8_t turn, uint8_t theBoard[8][8], uint8_t kingFile, uint8_t 
   uint8_t rookToFile = legalCastleKind == CASTLE_KINGSIDE ? CASTLE_KINGSIDE_ROOK_FILE : CASTLE_QUEENSIDE_ROOK_FILE;
   makeMove(turn, theBoard, kingFile, rank, kingToFile, rank);
   makeMove(turn, theBoard, rookFile, rank, rookToFile, rank);
+}
+
+void promote(uint8_t theBoard[8][8], uint8_t file, uint8_t rank, uint8_t promotion){
+  theBoard[file][rank] = (theBoard[file][rank] & ~MASK_PIECE_EXISTS) | promotion;
 }

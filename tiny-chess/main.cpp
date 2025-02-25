@@ -11,6 +11,7 @@ uint8_t cursorFile;
 uint8_t cursorRank;
 uint8_t handFile;
 uint8_t handRank;
+Promotion promotionChoice = PROMOTE_QUEEN;   // queen first by default
 
 // prevent the same input from immediately repeating, like xrate
 uint8_t bannedJoystickState;
@@ -20,9 +21,8 @@ uint8_t bannedRemainingTime;
 #define JOYSTICK_DELAY 96  // between first input and second input
 #define JOYSTICK_RATE 32   // between second and third, and ...
 
-
-
 #define cursorAnimationConstant 0x6
+#define promotionAnimationConstant 0x30
 // different values create fun effects when blitted really really fast onto the oled
 // 0x8 is a 2Hz breathing
 // 0x4 is 4Hz
@@ -65,11 +65,22 @@ void blitLegalMoves(){
   }
 }
 
+void blitPromotion(uint8_t file, uint8_t rank, Promotion piece){
+    moveTo(file << 3, rank << 3);
+    plotSprite(
+      // animation depends on timer 0:
+      (TCNT0 & promotionAnimationConstant)
+        ? (piece | (board[file][rank] & MASK_BLACK_ALLEGIANCE))  // promotion target
+        : 0x0
+    );
+}
+
 enum SuperState {
   MAIN_MENU,
   NEW_TURN,
   CONTEMPLATING,
   PIECE_IN_HAND,
+  PROMOTING,
   VIEWING_HISTORY,
   GAME_OVER
 };
@@ -86,8 +97,13 @@ void doIt() {
 
   for (;;) {
     // handle animations
-    // blit cursor according to timer
-    blitCursor();
+    if (superState == PROMOTING){
+      // cursor is on a promoting pawn!
+      blitPromotion(cursorFile, cursorRank, promotionChoice);
+    } else {
+      // blit cursor according to timer
+      blitCursor();
+    }
     if (bannedRemainingTime)
       bannedRemainingTime--;
 
@@ -220,8 +236,12 @@ void doIt() {
             } else {
               makeMove(turn, board, handFile, handRank, cursorFile, cursorRank);
             }
+            if (legalMove == PROMOTION){
+              superState = PROMOTING;
 
-            superState = NEW_TURN;
+            } else {
+              superState = NEW_TURN;
+            }
             blitBoard();
             break;
           }
@@ -229,6 +249,19 @@ void doIt() {
           break;
         }
 
+        break;
+      case PROMOTING:
+        // display promotion choices, left stick scrolls
+        if (joystickState & ((1 << STICK_LL) | (1 << STICK_LR) | (1 << STICK_LU) | (1 << STICK_LD))){
+          promotionChoice = promotionChoice == PROMOTE_KNIGHT? PROMOTE_QUEEN : promotionChoice - 1;
+        }
+        // right stick confirms
+        if (joystickState & ((1 << STICK_RL) | (1 << STICK_RR) | (1 << STICK_RU) | (1 << STICK_RD))){
+          promote(board, cursorFile, cursorRank, promotionChoice);
+          blitBoard();
+          promotionChoice = PROMOTE_QUEEN;
+          superState = NEW_TURN;
+        }
         break;
       case VIEWING_HISTORY:
         break;

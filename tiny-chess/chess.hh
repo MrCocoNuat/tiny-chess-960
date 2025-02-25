@@ -8,6 +8,7 @@ bool inCheck(uint8_t turn, uint8_t theBoard[8][8]);
 // returns the captured piece, if any
 uint8_t makeMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, uint8_t fromRank, uint8_t toFile, uint8_t toRank);
 void makeCastle(uint8_t turn, uint8_t theBoard[8][8], uint8_t kingFile, uint8_t rookFile, uint8_t rank, uint8_t legalCastleKind);
+void promote(uint8_t theBoard[8][8], uint8_t file, uint8_t rank, uint8_t promotion);
 
 extern const uint8_t MASK_PIECE_EXISTS;
 extern const uint8_t MASK_BLACK_ALLEGIANCE;

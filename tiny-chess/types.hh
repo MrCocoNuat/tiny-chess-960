@@ -7,8 +7,8 @@ enum PieceType {
     EMPTY = 0,
     // walkers
     PAWN = 0b001,
-    KNIGHT = 0b010,
-    KING = 0b011,
+    KING = 0b010,
+    KNIGHT = 0b011,
     // sliders
     BISHOP = 0b100,
     ROOK = 0b101,
@@ -38,11 +38,16 @@ enum LegalCastle : uint8_t {
     CASTLE_QUEENSIDE = 0xF1,
 };
 
+enum LegalPromotion : uint8_t {
+    PROMOTION = 0xF2,
+};
+
 // being mandatory, there is no "NONE"
 enum Promotion : uint8_t {
-    PROMOTE_QUEEN,
-    PROMOTE_ROOK,
-    PROMOTE_BISHOP,
-    PROMOTE_KNIGHT,
+    PROMOTE_QUEEN = QUEEN,
+    PROMOTE_ROOK = ROOK,
+    PROMOTE_BISHOP = BISHOP,
+    PROMOTE_KNIGHT = KNIGHT,
+    // these are consecutive values!
 };
 
