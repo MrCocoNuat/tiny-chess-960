@@ -3,6 +3,7 @@
 #include "debug-modes.hh"
 #include "main.hh"
 #include "menu.hh"
+#include "save.hh"
 
 // ATtiny84
 // 8MHz (but really OSCCAL = 0xFF) operation
@@ -13,9 +14,9 @@ void setup(){
 
   uint16_t gameSeed = doMenu() & ~(FLAG_NEW_GAME_SEED);
   clearDisplay();
-
+  
   initialize(gameSeed);
-  doIt();
+  doIt(getTurnCount());
 }
 
 void loop() {}

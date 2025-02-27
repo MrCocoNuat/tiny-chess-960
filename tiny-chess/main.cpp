@@ -3,6 +3,7 @@
 #include "sh1106.hh"
 #include "chess.hh"
 #include "types.hh"
+#include "save.hh"
 
 uint8_t board[8][8];   // file-major
 uint8_t turn;          // even = white odd = black
@@ -91,8 +92,9 @@ void initialize(uint16_t seed){
 }
 
 
-void doIt() {
-
+void doIt(uint8_t startingTurn) {
+  applySavedMovesUpTo(board, startingTurn);
+  turn = startingTurn;
   blitBoard();
 
   for (;;) {
@@ -236,10 +238,11 @@ void doIt() {
             } else {
               makeMove(turn, board, handFile, handRank, cursorFile, cursorRank);
             }
-            if (legalMove == PROMOTION){
+            if (legalMove == PROMOTION_ELIGIBLE){
               superState = PROMOTING;
 
             } else {
+              saveMove(turn, handFile, handRank, cursorFile, cursorRank, legalMove);
               superState = NEW_TURN;
             }
             blitBoard();
@@ -258,6 +261,7 @@ void doIt() {
         // right stick confirms
         if (joystickState & ((1 << STICK_RL) | (1 << STICK_RR) | (1 << STICK_RU) | (1 << STICK_RD))){
           promote(board, cursorFile, cursorRank, promotionChoice);
+          saveMove(turn, handFile, handRank, cursorFile, cursorRank, promotionChoice);
           blitBoard();
           promotionChoice = PROMOTE_QUEEN;
           superState = NEW_TURN;

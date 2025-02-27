@@ -31,15 +31,15 @@ enum Tile : uint8_t {
     BLACK_PAWN,
 };
 
-// dual purpose, returned by kindOfLegalCastle and saved to eeprom as moves
 enum LegalCastle : uint8_t {
-    CASTLE_ILLEGAL = 0,
-    CASTLE_KINGSIDE = 0xF0, // TEMP: these need to be invalid move ids for eeprom
-    CASTLE_QUEENSIDE = 0xF1,
+    CASTLE_KINGSIDE = 0x01,
+    CASTLE_QUEENSIDE = 0x02,
 };
 
+const uint8_t NO_SPECIAL_MOVE = 0x07;
+
 enum LegalPromotion : uint8_t {
-    PROMOTION = 0xF2,
+    PROMOTION_ELIGIBLE = 0xFF,
 };
 
 // being mandatory, there is no "NONE"

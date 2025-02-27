@@ -315,9 +315,9 @@ uint8_t kindOfLegalMove(uint8_t turn, uint8_t theBoard[8][8], uint8_t fromFile, 
   if (opensKing)
     return false;
   if (isPromotion){
-    return PROMOTION;
+    return PROMOTION_ELIGIBLE;
   }
-  return true;
+  return NO_SPECIAL_MOVE;
 }
 
 bool inCheck(uint8_t turn, uint8_t theBoard[8][8]) {
