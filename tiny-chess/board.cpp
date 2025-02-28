@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "board.hh"
 
 void setupBoard() {
   OSCCAL = 0xFF; // go as fast as possible
@@ -47,8 +48,8 @@ uint8_t getJoystickState() {
   return ~(pinA | ((pinB & (1 << PORTB0)) << 6) | ((pinB & (1 << PORTB1)) << 4) | ((pinB & (1 << PORTB2)) << 2));
 }
 
-uint8_t STICK_ALL_RIGHT = 0x0F;
-uint8_t STICK_ALL_LEFT = 0xF0;
+const uint8_t STICK_ALL_RIGHT = 0x0F;
+const uint8_t STICK_ALL_LEFT = 0xF0;
 
 void delayLite(uint8_t timeUnits){ // aprox 100uS
   uint8_t target = TCNT0 + timeUnits;

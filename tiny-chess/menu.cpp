@@ -3,11 +3,12 @@
 #include <avr/pgmspace.h>
 #include "board.hh"
 #include "math.hh"
+#include "menu.hh"
 
 #define SEED_MAX 960
 #define SEED_STANDARD_FIDE_ARMY 518
 
-const uint16_t FLAG_NEW_GAME_SEED = 0x0000; //TODO: this is not playing nicely when combined with game seed. So use it only for continues
+const uint16_t MASK_CONTINUE = 0x8000;
 
 // menu choices:
 // 0 continue
@@ -37,14 +38,14 @@ uint16_t doMenu(){
     moveTo(6, 7 << 3);
     plotText(PSTR("== TINY CHESS960 =="));
     moveTo(24, 5 << 3);
-    plotText(PSTR("CONTINUE NOTYET"));
+    plotText(PSTR("CONTINUE"));
     moveTo(24, 4 << 3);
-    plotText(PSTR("NEW GAME:"));
-    moveTo(36, 3 << 3);
+    plotText(PSTR("NEW GAME"));
+    moveTo(30, 3 << 3);
     plotText(PSTR("STANDARD"));
-    moveTo(36, 2 << 3);
+    moveTo(30, 2 << 3);
     plotText(PSTR("RANDOM SEED"));
-    moveTo(36, 1 << 3);
+    moveTo(30, 1 << 3);
     plotText(PSTR("SET SEED:"));
 
     for(;;){
@@ -81,22 +82,22 @@ uint16_t doMenu(){
 
       if (joystickState & (1 << STICK_RR)){
           switch(currentMenuChoice){
-            case 0: // continue
-             // return 0; //TODO: persistence not yet supported
-              continue;
+            case 0: // continue saved game
+              return MASK_CONTINUE;
             case 1: // standard game
-              return FLAG_NEW_GAME_SEED | SEED_STANDARD_FIDE_ARMY;
+              return SEED_STANDARD_FIDE_ARMY;
             case 2: // random game
-              return FLAG_NEW_GAME_SEED | ((randomByte << 8 | nextByte()) % SEED_MAX);
+              return ((randomByte << 8 | nextByte()) % SEED_MAX);
             case 3: // set seed game
               uint16_t seed = currentNewGameSeed[0] * 100 + currentNewGameSeed[1] * 10 + currentNewGameSeed[2];
-              return FLAG_NEW_GAME_SEED | seed;
+              return seed;
           }
       }
 
       if (currentEditingDigit >= 0){
           if (joystickState & (1 << STICK_LU)){
               currentNewGameSeed[currentEditingDigit] = currentNewGameSeed[currentEditingDigit] == 9 ? 9 : currentNewGameSeed[currentEditingDigit] + 1;
+              // the maximum seed is 960
               if (currentNewGameSeed[0] == 9 && currentNewGameSeed[1] > 5){
                   currentNewGameSeed[1] = 5;
                   currentNewGameSeed[2] = 9;

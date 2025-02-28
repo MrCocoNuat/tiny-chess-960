@@ -77,7 +77,6 @@ void blitPromotion(uint8_t file, uint8_t rank, Promotion piece){
 }
 
 enum SuperState {
-  MAIN_MENU,
   NEW_TURN,
   CONTEMPLATING,
   PIECE_IN_HAND,
@@ -189,7 +188,6 @@ void doIt(uint8_t startingTurn) {
         // transition to history
 
         break;
-      case MAIN_MENU:
       case PIECE_IN_HAND:
         // move cursor? TODO copypasted
         if (joystickState & STICK_ALL_LEFT) {
@@ -255,11 +253,11 @@ void doIt(uint8_t startingTurn) {
         break;
       case PROMOTING:
         // display promotion choices, left stick scrolls
-        if (joystickState & ((1 << STICK_LL) | (1 << STICK_LR) | (1 << STICK_LU) | (1 << STICK_LD))){
+        if (joystickState & STICK_ALL_LEFT){
           promotionChoice = promotionChoice == PROMOTE_KNIGHT? PROMOTE_QUEEN : promotionChoice - 1;
         }
         // right stick confirms
-        if (joystickState & ((1 << STICK_RL) | (1 << STICK_RR) | (1 << STICK_RU) | (1 << STICK_RD))){
+        if (joystickState & STICK_ALL_RIGHT){
           promote(board, cursorFile, cursorRank, promotionChoice);
           saveMove(turn, handFile, handRank, cursorFile, cursorRank, promotionChoice);
           blitBoard();
@@ -268,6 +266,7 @@ void doIt(uint8_t startingTurn) {
         }
         break;
       case VIEWING_HISTORY:
+        // eventually to contemplating?
         break;
       case GAME_OVER:
         blitBoard();
@@ -276,6 +275,7 @@ void doIt(uint8_t startingTurn) {
         } else {
           plotChar('S', 70, 0);
         }
+        saveTurnCount(0);
         return;  // TEMP: obviously don't just return from this then main...
     }
   }

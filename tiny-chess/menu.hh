@@ -1,3 +1,5 @@
-const uint16_t FLAG_NEW_GAME_SEED;
+#pragma once
+
+extern const uint16_t MASK_CONTINUE;
 
 uint16_t doMenu();

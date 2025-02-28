@@ -14,8 +14,8 @@ typedef enum {
 } Joystick;
 uint8_t getJoystickState();
 
-extern uint8_t STICK_ALL_LEFT;
-extern uint8_t STICK_ALL_RIGHT;
+extern const uint8_t STICK_ALL_LEFT;
+extern const uint8_t STICK_ALL_RIGHT;
 
 void delayLite(uint8_t timeUnits);
 
