@@ -31,7 +31,6 @@ void setup(){
 void loop() {}
 
 // improvements:
-// flesh out the continue option as well as save/get seed, new game resets turn count
 // history review mode to scroll the turns back
 // AI to play black
 // AI to play white

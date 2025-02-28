@@ -280,5 +280,3 @@ void doIt(uint8_t startingTurn) {
     }
   }
 }
-
-//RESUME: kindOfLegalCastle is not showing castling as legal

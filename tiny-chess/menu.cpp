@@ -32,8 +32,6 @@ uint16_t randomByte;
 #define JOYSTICK_DELAY2 48  // between first input and second input
 #define JOYSTICK_RATE2 24   // between second and third, and ...
 
-// return:
-// FLAG_NEW_GAME_SEED ? <new game seed> : <continue game>
 uint16_t doMenu(){
     moveTo(6, 7 << 3);
     plotText(PSTR("== TINY CHESS960 =="));
