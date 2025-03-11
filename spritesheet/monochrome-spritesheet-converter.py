@@ -3,20 +3,17 @@ Piskel supports an export to C array option (this is spritesheet.c). But this is
 I need monochrome values and can't accept multiplying needed storage by 8.
 
 Therefore, this script reads in the source of that array and converts it into a form better suited for the microcontroller:
-
-turn the array static const uint32_t new_piskel_data[4][32*32] which is for 32*32 pixels per "frame" (really just different spritesheets)
-into a static const uint8_t new_piskel_data[4*4*4][8] which separates out each actual 8*8 monochrome sprite
 """
 
 import numpy as np
 import re
 
 # Constants
-NEW_PISKEL_FRAME_WIDTH = 32
-NEW_PISKEL_FRAME_HEIGHT = 32
+NEW_PISKEL_FRAME_WIDTH = 8
+NEW_PISKEL_FRAME_HEIGHT = 8
 SPRITE_WIDTH = 8
 SPRITE_HEIGHT = 8
-NUM_FRAMES = 4
+NUM_FRAMES = 16
 SPRITES_PER_FRAME = (NEW_PISKEL_FRAME_WIDTH // SPRITE_WIDTH) * (NEW_PISKEL_FRAME_HEIGHT // SPRITE_HEIGHT)
 
 # Function to read ARGB data from the C source file
@@ -46,7 +43,7 @@ def read_argb_data_from_file(filename):
 sprites = np.zeros((NUM_FRAMES * SPRITES_PER_FRAME, SPRITE_WIDTH), dtype=np.uint8)  # Adjusted width
 
 # Read the ARGB data from the C file
-new_piskel_data = read_argb_data_from_file('spritesheet.c')
+new_piskel_data = read_argb_data_from_file('pieces.c')
 
 # Process each frame
 for frame_index in range(NUM_FRAMES):

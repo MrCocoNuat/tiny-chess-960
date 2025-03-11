@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "board.hh"
 
 void setupBoard() {
   OSCCAL = 0xFF; // go as fast as possible
@@ -21,6 +22,14 @@ void setupBoard() {
   PORTA |= (1 << PORTA7) | (1 << PORTA3) | (1 << PORTA2) | (1 << PORTA1) | (1 << PORTA0);
   PORTB |= (1 << PORTB2) | (1 << PORTB1) | (1 << PORTB0);
 
+  // Timer 1 is being used for tone playback
+  // - use timer 0 to count units of ... 4 milliseconds, I guess
+  // this is used for delay and UI purposes (no using the horribly expensive general arduino version)
+  // oh no, slowest timer0 can be is /1024... so need artificial timing? but even 30Hz interrupts are sooooo costly especially in a context where audio is being played
+
+  // /1024 prescaler on timer 0
+  TCCR0B = 0b00000101;
+
   // output on OC1B
   TCCR1A = (1 << COM1B0);
   // CTC (clear on OCR1A)
@@ -39,6 +48,14 @@ uint8_t getJoystickState() {
   return ~(pinA | ((pinB & (1 << PORTB0)) << 6) | ((pinB & (1 << PORTB1)) << 4) | ((pinB & (1 << PORTB2)) << 2));
 }
 
+const uint8_t STICK_ALL_RIGHT = 0x0F;
+const uint8_t STICK_ALL_LEFT = 0xF0;
+
+void delayLite(uint8_t timeUnits){ // aprox 100uS
+  uint8_t target = TCNT0 + timeUnits;
+  // busywait - not like there's anything better to do
+  while (TCNT0 != target);
+}
 
 // use the prescaler of timer 1: realistically we only need /8 -> 1MHz timer ticks, 64Hz timer overflows
 // Offer 4 octaves, because the decreasing precision at OCR1A ~= 0xFFFF / 0b00001000 is still OK. But caller can ask for higher too

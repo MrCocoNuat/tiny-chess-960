@@ -9,7 +9,6 @@
 #include <avr/pgmspace.h>
 #include <stdlib.h>
 #include <Arduino.h>
-#include "monochrome-spritesheet.hh"
 
 /* Tiny Graphics Library v3 - see http://www.technoblogy.com/show?23OS
 
@@ -36,8 +35,8 @@ int const onedata = 0xC0;
 // OLED display **********************************************
 
 // Character set for text - stored in program memory
-// 6 columns of 8
-const uint8_t CHAR_MAP[96][6] PROGMEM = {
+// 6 columns of 8, only ascii 0x20 (space) to 0x5A (Z)
+const uint8_t CHAR_MAP[59][6] PROGMEM = {
   { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
   { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00 },
   { 0x00, 0x07, 0x00, 0x07, 0x00, 0x00 },
@@ -96,45 +95,32 @@ const uint8_t CHAR_MAP[96][6] PROGMEM = {
   { 0x3F, 0x40, 0x38, 0x40, 0x3F, 0x00 },
   { 0x63, 0x14, 0x08, 0x14, 0x63, 0x00 },
   { 0x03, 0x04, 0x78, 0x04, 0x03, 0x00 },
-  { 0x61, 0x59, 0x49, 0x4D, 0x43, 0x00 },
-  { 0x00, 0x7F, 0x41, 0x41, 0x41, 0x00 },
-  { 0x02, 0x04, 0x08, 0x10, 0x20, 0x00 },
-  { 0x00, 0x41, 0x41, 0x41, 0x7F, 0x00 },
-  { 0x04, 0x02, 0x01, 0x02, 0x04, 0x00 },
-  { 0x40, 0x40, 0x40, 0x40, 0x40, 0x00 },
-  { 0x00, 0x03, 0x07, 0x08, 0x00, 0x00 },
-  { 0x20, 0x54, 0x54, 0x78, 0x40, 0x00 },
-  { 0x7F, 0x28, 0x44, 0x44, 0x38, 0x00 },
-  { 0x38, 0x44, 0x44, 0x44, 0x28, 0x00 },
-  { 0x38, 0x44, 0x44, 0x28, 0x7F, 0x00 },
-  { 0x38, 0x54, 0x54, 0x54, 0x18, 0x00 },
-  { 0x00, 0x08, 0x7E, 0x09, 0x02, 0x00 },
-  { 0x18, 0xA4, 0xA4, 0x9C, 0x78, 0x00 },
-  { 0x7F, 0x08, 0x04, 0x04, 0x78, 0x00 },
-  { 0x00, 0x44, 0x7D, 0x40, 0x00, 0x00 },
-  { 0x20, 0x40, 0x40, 0x3D, 0x00, 0x00 },
-  { 0x7F, 0x10, 0x28, 0x44, 0x00, 0x00 },
-  { 0x00, 0x41, 0x7F, 0x40, 0x00, 0x00 },
-  { 0x7C, 0x04, 0x78, 0x04, 0x78, 0x00 },
-  { 0x7C, 0x08, 0x04, 0x04, 0x78, 0x00 },
-  { 0x38, 0x44, 0x44, 0x44, 0x38, 0x00 },
-  { 0xFC, 0x18, 0x24, 0x24, 0x18, 0x00 },
-  { 0x18, 0x24, 0x24, 0x18, 0xFC, 0x00 },
-  { 0x7C, 0x08, 0x04, 0x04, 0x08, 0x00 },
-  { 0x48, 0x54, 0x54, 0x54, 0x24, 0x00 },
-  { 0x04, 0x04, 0x3F, 0x44, 0x24, 0x00 },
-  { 0x3C, 0x40, 0x40, 0x20, 0x7C, 0x00 },
-  { 0x1C, 0x20, 0x40, 0x20, 0x1C, 0x00 },
-  { 0x3C, 0x40, 0x30, 0x40, 0x3C, 0x00 },
-  { 0x44, 0x28, 0x10, 0x28, 0x44, 0x00 },
-  { 0x4C, 0x90, 0x90, 0x90, 0x7C, 0x00 },
-  { 0x44, 0x64, 0x54, 0x4C, 0x44, 0x00 },
-  { 0x00, 0x08, 0x36, 0x41, 0x00, 0x00 },
-  { 0x00, 0x00, 0x77, 0x00, 0x00, 0x00 },
-  { 0x00, 0x41, 0x36, 0x08, 0x00, 0x00 },
-  { 0x00, 0x06, 0x09, 0x06, 0x00, 0x00 },  // degree symbol = '~'
-  { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 }
+  { 0x61, 0x59, 0x49, 0x4D, 0x43, 0x00 }
+};
 
+// spritesheet
+// this is modified a bit from the generated monochrome-spritesheet
+// the PROGMEM directive has been added
+// indices have been shifted around so that the PieceType enum + allegiance bit can index directly into here,
+// with non-piece sprites taking up the remaining spots (X000 and X111)
+
+const uint8_t monochrome_sprites[16][8] PROGMEM = {
+    {0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000}, // black tile
+    {0b00000000, 0b00000000, 0b00000010, 0b00101110, 0b00101110, 0b00000010, 0b00000000, 0b00000000}, // white pawn
+    {0b00000000, 0b00001100, 0b00010010, 0b01001110, 0b01001110, 0b00010010, 0b00001100, 0b00000000}, // white king
+    {0b00000000, 0b00000000, 0b00010010, 0b00110110, 0b01111110, 0b00111010, 0b00000000, 0b00000000}, // white knight
+    {0b00000000, 0b00000000, 0b00011010, 0b00111110, 0b01001110, 0b00011010, 0b00000000, 0b00000000}, // white bishop
+    {0b00000000, 0b00000000, 0b01100010, 0b00111110, 0b01111110, 0b01100010, 0b00000000, 0b00000000}, // white rook
+    {0b00000000, 0b00110000, 0b00001010, 0b01101110, 0b01101110, 0b00001010, 0b00110000, 0b00000000}, // white queen
+    {0b00000000, 0b00000000, 0b00000000, 0b00011000, 0b00011000, 0b00000000, 0b00000000, 0b00000000}, // possible move
+    {0b00000000, 0b00100100, 0b01001000, 0b00010010, 0b00100100, 0b01001000, 0b00010010, 0b00000000}, // white tile
+    {0b00000000, 0b00000011, 0b00101101, 0b01010001, 0b01010001, 0b00101101, 0b00000011, 0b00000000}, // black pawn
+    {0b00001100, 0b00010011, 0b01101101, 0b10110001, 0b10110001, 0b01101101, 0b00010011, 0b00001100}, // black king
+    {0b00000000, 0b00010011, 0b00101101, 0b01001001, 0b10000001, 0b01000101, 0b00111011, 0b00000000}, // black knight
+    {0b00000000, 0b00011011, 0b00100101, 0b01000001, 0b10010001, 0b01100101, 0b00011011, 0b00000000}, // black bishop
+    {0b00000000, 0b01100011, 0b10011101, 0b10000001, 0b01000001, 0b10011101, 0b01100011, 0b00000000}, // black rook
+    {0b00110000, 0b01001011, 0b01110101, 0b10010001, 0b10010001, 0b01110101, 0b01001011, 0b00110000}, // black queen
+    {0b11100111, 0b10000001, 0b10000001, 0b00000000, 0b00000000, 0b10000001, 0b10000001, 0b11100111}, // cursor
 };
 
 // Current plot position
@@ -256,6 +242,26 @@ void plotText(PGM_P s) {
   Wire.endTransmission();
 }
 
+// Plot a 8*8 sprite at the current plot position - really really fast. The sprite should be defined as the text glyphs here are, columns of 8 bits for lit pixels
+void plotSprite(uint8_t spriteIndex){
+  Wire.beginTransmission(address);
+  command(0xB0 + (y0 >> 3));
+  // column is automatically incremented on display memory writes so no need to keep re-setting it!
+  command(0x00 + ((x0 + 2) & 0x0F));  // initial Column low nibble
+  command(0x10 + ((x0 + 2) >> 4));    // initial Column high nibble
+  command(0xE0); // enter read modify write
+
+  Wire.endTransmission(); // microcontroller has a really small i2c buffer! so flush it per character
+  Wire.beginTransmission(address);
+  for (int col = 0; col < 8; col++) {
+    Wire.write(onedata);
+    Wire.write(pgm_read_byte(&monochrome_sprites[spriteIndex][col]));
+  }
+
+  command(0xEE);  // exit read modify write
+  Wire.endTransmission();
+}
+
 void invert(){
   Wire.beginTransmission(address);
   command(0xA7); // inverse display output
@@ -297,7 +303,7 @@ void resetForceDisplay(){
 }
 // contrast but for OLEDs
 // default is 1 << 7
-void setBrightness(uint8_t brightness){ 
+void setBrightness(uint8_t brightness){
   Wire.beginTransmission(address);
   command(0x81); // enable contrast control mode
   command(brightness); // send it, and exit contrast control mode
