@@ -16,3 +16,12 @@ Includes a full library for common handheld microcomputer tasks (accepting matri
 - Singleplayer against a tiny chess engine (hey, I've only got 1kB to work with) *in progress*
 
 ![main menu](/github-assets/main-menu.jpg)
+
+## Building
+
+Arduino IDE 2.0, with Spence Konde's ATTinyCore: `ATtiny 24/44/84`
+- No bootloader (need all the space we have!)
+- 8MHz internal
+- EEPROM retained
+- LTO enabled
+- `millis()/micros()` disabled
