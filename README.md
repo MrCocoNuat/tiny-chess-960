@@ -1,4 +1,7 @@
 # tiny-chess
+
+See [the associated blog article](https://mrcoconuat.github.io/posts/tiny-chess/chess.html)
+
 A full chess960 (Fischer Random) playing handheld in 8KiB based on ATtiny84.
 
 ![device](/github-assets/device.jpg)
